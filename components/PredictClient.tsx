@@ -4,7 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Match } from "@/lib/types";
-import { submitPicksAction } from "@/lib/actions";
+import { submitPicksAction, toggleDollarBetAction } from "@/lib/actions";
 import { useScores, type Score } from "@/lib/useScores";
 import { parseApiTime, teamCode, verdictLabel } from "@/lib/format";
 import { c, font } from "@/lib/theme";
@@ -14,6 +14,13 @@ import { EmptyState, Notice, PrimaryButton, ScoreStepper, SegTabs } from "@/comp
 
 type Groups = { today: Match[]; upcoming: Match[]; locked: Match[] };
 const ZERO: Score = { h: 0, a: 0 };
+
+function betHint(m: Match, active: boolean): string {
+  if (active) return "You're in — losers pay the pot";
+  if (!m.is_prediction_open) return "Betting closed";
+  if (!m.my_prediction) return "Save your pick first";
+  return "Stake $1 on your call";
+}
 
 export default function PredictClient({
   groups,
@@ -30,6 +37,7 @@ export default function PredictClient({
   const [tab, setTab] = useState(initialTab);
   const [pending, startTransition] = useTransition();
   const [msg, setMsg] = useState<{ tone: "error" | "lime"; text: string } | null>(null);
+  const [betPending, setBetPending] = useState<number | null>(null);
 
   const all = useMemo(() => [...groups.today, ...groups.upcoming, ...groups.locked], [groups]);
   const initial = useMemo(
@@ -69,6 +77,23 @@ export default function PredictClient({
       if (res.ok) {
         setBaseline({ ...scores });
         setMsg({ tone: "lime", text: `Saved ${queued.length} pick${queued.length === 1 ? "" : "s"}.` });
+        router.refresh();
+      } else {
+        setMsg({ tone: "error", text: res.error });
+      }
+    });
+  };
+
+  /** POST /matches/{id}/dollar-bet — the API refuses without a saved prediction. */
+  const toggleBet = (m: Match) => {
+    setMsg(null);
+    setBetPending(m.id);
+    const wasIn = m.dollar_bet?.active ?? false;
+    startTransition(async () => {
+      const res = await toggleDollarBetAction(m.id);
+      setBetPending(null);
+      if (res.ok) {
+        setMsg({ tone: "lime", text: wasIn ? "Left the $1 bet." : "Joined the $1 bet." });
         router.refresh();
       } else {
         setMsg({ tone: "error", text: res.error });
@@ -148,6 +173,9 @@ export default function PredictClient({
             const s = scoreOf(m);
             const editable = m.is_prediction_open && !isGuest && !pending;
             const saved = !!m.my_prediction && !changed(m);
+            const betActive = m.dollar_bet?.active ?? false;
+            // The API rejects a bet without a saved main prediction (422).
+            const canBet = m.is_prediction_open && !!m.my_prediction && !isGuest && !pending;
             return (
               <div
                 key={m.id}
@@ -219,6 +247,47 @@ export default function PredictClient({
                     <span style={{ color: c.muted2 }}>Locked — no pick submitted</span>
                   )}
                 </div>
+
+                {/* $1 bet — hidden for guests, who can't stake anything */}
+                {!isGuest && (
+                  <div
+                    style={{
+                      marginTop: 11,
+                      paddingTop: 11,
+                      borderTop: `1px solid ${c.border}`,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
+                    }}
+                  >
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 12.5, fontWeight: 600 }}>
+                        💵 $1 bet <span style={{ color: c.muted2, fontWeight: 500 }}>· {m.dollar_bet_count} in</span>
+                      </div>
+                      <div style={{ color: c.muted, fontSize: 11, marginTop: 2 }}>{betHint(m, betActive)}</div>
+                    </div>
+                    <button
+                      onClick={() => toggleBet(m)}
+                      disabled={!canBet}
+                      className="pressable"
+                      style={{
+                        background: betActive ? c.lime : "rgba(255,255,255,0.06)",
+                        color: betActive ? c.limeInk : c.text2,
+                        borderRadius: 10,
+                        padding: "8px 14px",
+                        fontFamily: font.display,
+                        fontWeight: 700,
+                        fontSize: 12.5,
+                        opacity: canBet ? 1 : 0.4,
+                        cursor: canBet ? "pointer" : "not-allowed",
+                        flexShrink: 0,
+                        minWidth: 68,
+                      }}
+                    >
+                      {betPending === m.id ? "…" : betActive ? "Joined" : "Join"}
+                    </button>
+                  </div>
+                )}
 
                 <div style={{ marginTop: 10, textAlign: "center" }}>
                   <Link href={`/match/${m.id}`} style={{ color: c.muted2, fontSize: 11.5, fontWeight: 600 }}>

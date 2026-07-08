@@ -133,6 +133,7 @@ export async function toggleDollarBetAction(matchId: number): Promise<MutationRe
   }
 
   revalidatePath(`/match/${matchId}`);
+  revalidatePath("/predict");
   revalidatePath("/ranks");
   return { ok: true };
 }

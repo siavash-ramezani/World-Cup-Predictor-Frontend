@@ -137,7 +137,9 @@ export default async function HomePage() {
         {/* recent results */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "22px 2px 10px" }}>
           <div style={{ fontFamily: font.display, fontSize: 15, fontWeight: 600 }}>Recent results</div>
-          <span style={{ color: c.muted2, fontSize: 12, fontWeight: 600 }}>This week</span>
+          <Link href="/matches" style={{ color: c.lime, fontSize: 12, fontWeight: 700 }}>
+            See all →
+          </Link>
         </div>
 
         {recents.length === 0 ? (

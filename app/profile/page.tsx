@@ -33,6 +33,7 @@ export default async function ProfilePage() {
 
   const links = [
     ...(me.is_guest ? [] : [{ label: "Your public profile", href: `/users/${me.id}`, sw: c.purple }]),
+    { label: "Past matches", href: "/matches", sw: c.red },
     { label: "Teams", href: "/teams", sw: c.gold },
     { label: "Make picks", href: "/predict", sw: c.lime },
     { label: "Leaderboards", href: "/ranks", sw: c.cyan },
