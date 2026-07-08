@@ -138,6 +138,43 @@ a {
   font-variant-numeric: tabular-nums;
 }
 
+/* top navigation progress bar */
+.nav-progress {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 3px;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 260ms ease 140ms;
+}
+.nav-progress[data-state="loading"] {
+  opacity: 1;
+  transition: opacity 90ms ease;
+}
+.nav-progress[data-state="done"] {
+  opacity: 0;
+}
+.nav-progress__bar {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, var(--cyan), var(--lime));
+  border-radius: 0 3px 3px 0;
+  box-shadow:
+    0 0 10px rgba(181, 255, 61, 0.65),
+    0 0 22px rgba(70, 229, 255, 0.35);
+  transition: width 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.nav-progress[data-state="idle"] .nav-progress__bar {
+  transition: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-progress,
+  .nav-progress__bar {
+    transition: none;
+  }
+}
+
 /* form fields (login) */
 .field {
   width: 100%;

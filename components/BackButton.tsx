@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { c } from "@/lib/theme";
 import { ChevronLeft } from "@/components/icons";
+import { startNavigationProgress } from "@/components/NavigationProgress";
 
 export default function BackButton({ fallback = "/" }: { fallback?: string }) {
   const router = useRouter();
@@ -11,8 +12,12 @@ export default function BackButton({ fallback = "/" }: { fallback?: string }) {
       aria-label="Back"
       className="pressable"
       onClick={() => {
+        // `router.back()` fires popstate, which the progress bar already listens for.
         if (window.history.length > 1) router.back();
-        else router.push(fallback);
+        else {
+          startNavigationProgress();
+          router.push(fallback);
+        }
       }}
       style={{
         width: 38,

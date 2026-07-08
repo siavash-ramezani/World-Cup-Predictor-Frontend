@@ -3,6 +3,7 @@ import { Manrope, Space_Grotesk } from "next/font/google";
 import "flag-icons/css/flag-icons.min.css";
 import "./globals.css";
 import TabBar from "@/components/TabBar";
+import NavigationProgress from "@/components/NavigationProgress";
 
 const manrope = Manrope({
   variable: "--font-manrope",
@@ -37,6 +38,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${manrope.variable} ${grotesk.variable}`}>
       <body>
+        <NavigationProgress />
         <div className="canvas">
           <div className="device">
             <div className="island" aria-hidden />

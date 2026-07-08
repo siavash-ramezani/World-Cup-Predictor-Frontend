@@ -84,6 +84,8 @@ The bottom **tab bar** is persistent on the four top-level tabs and hides itself
 > Next stream a `200` before the page runs, which silently downgrades `notFound()` and
 > `redirect()` to client-side navigations. Pages are SSR'd whole instead, so
 > `/users/999999` really returns `404` and a finished match really `307`s to its results.
+> `components/NavigationProgress.tsx` provides the "something is happening" feedback that a
+> `loading.tsx` would otherwise give, without reintroducing that problem.
 
 ## Notable behaviours
 
@@ -110,6 +112,11 @@ The bottom **tab bar** is persistent on the four top-level tabs and hides itself
   button is disabled with a "Save your pick first" hint until the pick is submitted, rather
   than firing a request that's guaranteed to fail. The live `dollar_bet_count` ("N in") comes
   straight from the match payload.
+- **Navigation progress bar.** A slim lime/cyan bar pinned to the top of the viewport during
+  route transitions. It starts on same-origin anchor clicks (skipping same-route links),
+  on back/forward (`popstate`), and on a `navigationprogress:start` event for programmatic
+  `router.push()`. It completes when `usePathname()` changes. A 100 ms delay before showing
+  means fast navigations never flash it, and a 12 s safety timeout stops it getting stuck.
 - **Guests** can browse everything but cannot predict or bet; the UI disables the controls
   and explains why instead of letting the API 403. The $1 bet row is hidden entirely for them.
 
