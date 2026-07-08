@@ -7,7 +7,7 @@ import { TOKEN_COOKIE, USER_COOKIE } from "@/lib/cookie-names";
 
 export { TOKEN_COOKIE, USER_COOKIE };
 
-const API_BASE = process.env.API_BASE_URL ?? "http://127.0.0.1:8000/api/v1";
+  const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL  ?? "http://127.0.0.1:8000/api/v1";
 
 const COOKIE_OPTS = {
   httpOnly: true,
