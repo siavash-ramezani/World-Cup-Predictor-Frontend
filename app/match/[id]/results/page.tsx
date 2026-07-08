@@ -117,7 +117,7 @@ export default async function MatchResultsPage({ params }: { params: Promise<{ i
           </div>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-around", gap: 6 }}>
             <Link href={`/teams/${encodeURIComponent(match.home.name)}`} className="pressable" style={teamColumn}>
-              <FlagDisc team={match.home} size={45} ring={1.5} />
+              <FlagDisc team={match.home} size={56} ring={1.5} />
               <div style={teamName}>{match.home.name}</div>
             </Link>
             <div style={{ textAlign: "center" }}>
