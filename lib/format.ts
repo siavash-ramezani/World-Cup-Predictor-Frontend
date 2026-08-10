@@ -1,5 +1,6 @@
 import { c } from "@/lib/theme";
 import type { Match, Prediction } from "@/lib/types";
+import type { Dictionary } from "@/lib/i18n/types";
 
 /** Regional-indicator flag emoji ("🇫🇷") → ISO-3166 alpha-2 ("FR"). */
 export function flagToCode(flag?: string | null): string {
@@ -87,30 +88,41 @@ export function initials(name: string): string {
   return parts.map((p) => [...p][0] ?? "").join("");
 }
 
-export type PickVerdict = { tag: string; color: string };
+export type PickKind = "exact" | "result" | "missed" | "pending";
+export type PickVerdict = { kind: PickKind; tag: string; color: string };
 
 /** Classify a settled prediction against the final score. */
-export function classifyPick(pred: Prediction, match: Pick<Match, "home_score" | "away_score">, pointsEarned: number): PickVerdict {
-  if (match.home_score == null || match.away_score == null) return { tag: "Pending", color: c.muted2 };
-  if (pred.home === match.home_score && pred.away === match.away_score) return { tag: "Exact", color: c.lime };
-  if (pointsEarned > 0) return { tag: "Result", color: c.cyan };
-  return { tag: "Missed", color: c.muted2 };
+export function classifyPick(
+  pred: Prediction,
+  match: Pick<Match, "home_score" | "away_score">,
+  pointsEarned: number,
+  t: Dictionary["verdict"],
+): PickVerdict {
+  if (match.home_score == null || match.away_score == null) return { kind: "pending", tag: t.pending, color: c.muted2 };
+  if (pred.home === match.home_score && pred.away === match.away_score) return { kind: "exact", tag: t.exact, color: c.lime };
+  if (pointsEarned > 0) return { kind: "result", tag: t.result, color: c.cyan };
+  return { kind: "missed", tag: t.missed, color: c.muted2 };
 }
 
 /** Longer copy used on the Home "recent results" rows. */
-export function classifyPickLong(pred: Prediction, match: Pick<Match, "home_score" | "away_score">, pointsEarned: number): PickVerdict {
-  const v = classifyPick(pred, match, pointsEarned);
-  const long: Record<string, string> = { Exact: "Exact score", Result: "Right result", Missed: "Missed", Pending: "Pending" };
-  return { tag: long[v.tag] ?? v.tag, color: v.color };
+export function classifyPickLong(
+  pred: Prediction,
+  match: Pick<Match, "home_score" | "away_score">,
+  pointsEarned: number,
+  t: Dictionary["verdict"],
+): PickVerdict {
+  const v = classifyPick(pred, match, pointsEarned, t);
+  const long: Record<PickKind, string> = { exact: t.exactLong, result: t.resultLong, missed: t.missedLong, pending: t.pendingLong };
+  return { ...v, tag: long[v.kind] };
 }
 
 export function outcomeOf(home: number, away: number): "home" | "draw" | "away" {
   return home > away ? "home" : home < away ? "away" : "draw";
 }
 
-export function verdictLabel(homeName: string, awayName: string, home: number, away: number): string {
+export function verdictLabel(homeName: string, awayName: string, home: number, away: number, t: Dictionary["verdict"]): string {
   const o = outcomeOf(home, away);
-  return o === "home" ? `${homeName} win` : o === "away" ? `${awayName} win` : "Draw";
+  return o === "home" ? t.teamWin(homeName) : o === "away" ? t.teamWin(awayName) : t.draw;
 }
 
 export function formatBalance(n: number): string {
@@ -121,11 +133,11 @@ export function formatPoints(n: number): string {
   return n > 0 ? `+${n}` : String(n);
 }
 
-export function greeting(d = new Date()): string {
+export function greeting(t: Dictionary["greeting"], d = new Date()): string {
   const h = d.getHours();
-  if (h < 12) return "Good morning";
-  if (h < 18) return "Good afternoon";
-  return "Good evening";
+  if (h < 12) return t.morning;
+  if (h < 18) return t.afternoon;
+  return t.evening;
 }
 
 /** "2026-07-09 23:15:00" (server local time) → ms epoch, tolerant of the space separator. */
@@ -135,7 +147,7 @@ export function parseApiTime(s: string): number {
 }
 
 /** "2h 14m", "3d 4h", or null once elapsed. */
-export function countdownLabel(target: number, now: number): string | null {
+export function countdownLabel(target: number, now: number, t: Dictionary["countdown"]): string | null {
   let ms = target - now;
   if (ms <= 0) return null;
   const d = Math.floor(ms / 86400000);
@@ -143,10 +155,10 @@ export function countdownLabel(target: number, now: number): string | null {
   const h = Math.floor(ms / 3600000);
   ms -= h * 3600000;
   const m = Math.floor(ms / 60000);
-  if (d > 0) return `${d}d ${h}h`;
-  if (h > 0) return `${h}h ${m}m`;
+  if (d > 0) return `${d}${t.day} ${h}${t.hour}`;
+  if (h > 0) return `${h}${t.hour} ${m}${t.minute}`;
   const s = Math.floor((ms - m * 60000) / 1000);
-  return `${m}m ${s}s`;
+  return `${m}${t.minute} ${s}${t.second}`;
 }
 
 /** Same calendar day in the viewer's timezone. */

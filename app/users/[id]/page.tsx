@@ -7,10 +7,12 @@ import { classifyPick, formatPoints, teamCode } from "@/lib/format";
 import Avatar from "@/components/Avatar";
 import BackButton from "@/components/BackButton";
 import { EmptyState, Pill } from "@/components/ui";
+import { getT } from "@/lib/i18n/server";
 
 export default async function UserProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const session = await requireSession();
+  const t = await getT();
 
   let profile: PublicProfile;
   try {
@@ -27,16 +29,16 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
   const exactRate = total_predictions ? Math.round((exact_count / total_predictions) * 100) : 0;
 
   const tiles = [
-    { v: total_points.toLocaleString("en-US"), label: "total points", color: c.lime },
-    { v: String(total_predictions), label: "predictions", color: c.text },
-    { v: `${accuracy}%`, label: "accuracy", color: c.cyan },
+    { v: total_points.toLocaleString("en-US"), label: t.userProfile.totalPointsLabel, color: c.lime },
+    { v: String(total_predictions), label: t.userProfile.predictionsLabel, color: c.text },
+    { v: `${accuracy}%`, label: t.userProfile.accuracyLabel, color: c.cyan },
   ];
 
   const breakdown = [
-    { key: "Exact", n: distribution.exact, color: c.lime },
-    { key: "Result", n: distribution.result, color: c.cyan },
-    { key: "Diff", n: distribution.diff, color: c.gold },
-    { key: "Missed", n: distribution.none, color: c.dim },
+    { key: t.userProfile.dExact, n: distribution.exact, color: c.lime },
+    { key: t.userProfile.dResult, n: distribution.result, color: c.cyan },
+    { key: t.userProfile.dDiff, n: distribution.diff, color: c.gold },
+    { key: t.userProfile.dMissed, n: distribution.none, color: c.dim },
   ];
   const bdTotal = breakdown.reduce((a, b) => a + b.n, 0) || 1;
 
@@ -54,7 +56,7 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
         {/* top bar */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
           <BackButton fallback="/ranks" />
-          <div style={{ color: c.muted, fontSize: 13, fontWeight: 600 }}>Player</div>
+          <div style={{ color: c.muted, fontSize: 13, fontWeight: 600 }}>{t.userProfile.header}</div>
           <div style={{ width: 38 }} />
         </div>
 
@@ -87,11 +89,11 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
             <div style={{ display: "flex", gap: 7, marginTop: 10, flexWrap: "wrap" }}>
               {isMe && (
                 <Pill bg={c.limeTint} color={c.lime} style={{ fontFamily: font.display, fontWeight: 700 }}>
-                  You
+                  {t.userProfile.you}
                 </Pill>
               )}
-              <Pill>{exact_count} exact scores</Pill>
-              {exactRate > 0 && <Pill style={{ color: c.muted }}>{exactRate}% exact</Pill>}
+              <Pill>{t.userProfile.exactScoresCount(exact_count)}</Pill>
+              {exactRate > 0 && <Pill style={{ color: c.muted }}>{t.userProfile.exactRatePct(exactRate)}</Pill>}
             </div>
           </div>
         </div>
@@ -109,7 +111,7 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
         </div>
 
         {/* breakdown */}
-        <div style={{ fontFamily: font.display, fontSize: 15, fontWeight: 600, margin: "22px 2px 10px" }}>Prediction breakdown</div>
+        <div style={{ fontFamily: font.display, fontSize: 15, fontWeight: 600, margin: "22px 2px 10px" }}>{t.userProfile.breakdownTitle}</div>
         <div style={{ background: c.surface, border: `1px solid ${c.border}`, borderRadius: 16, padding: 16 }}>
           <div style={{ display: "flex", height: 10, borderRadius: 999, overflow: "hidden", gap: 2, marginBottom: 14 }}>
             {breakdown.map((b) => (
@@ -130,7 +132,7 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
         {/* daily points */}
         {pts.length > 0 && (
           <>
-            <div style={{ fontFamily: font.display, fontSize: 15, fontWeight: 600, margin: "22px 2px 10px" }}>Points per day</div>
+            <div style={{ fontFamily: font.display, fontSize: 15, fontWeight: 600, margin: "22px 2px 10px" }}>{t.userProfile.pointsPerDay}</div>
             <div style={{ background: c.surface, border: `1px solid ${c.border}`, borderRadius: 16, padding: "16px 12px 10px" }}>
               <div style={{ display: "flex", alignItems: "flex-end", gap: 3, height: barH }}>
                 {pts.map((v, i) => (
@@ -159,13 +161,13 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
         )}
 
         {/* recent predictions */}
-        <div style={{ fontFamily: font.display, fontSize: 15, fontWeight: 600, margin: "22px 2px 10px" }}>Recent predictions</div>
+        <div style={{ fontFamily: font.display, fontSize: 15, fontWeight: 600, margin: "22px 2px 10px" }}>{t.userProfile.recentPredictions}</div>
         {recent.length === 0 ? (
-          <EmptyState>No predictions yet.</EmptyState>
+          <EmptyState>{t.userProfile.noPredictions}</EmptyState>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {recent.map((p, i) => {
-              const v = classifyPick(p.prediction, p.match, p.points_earned);
+              const v = classifyPick(p.prediction, p.match, p.points_earned, t.verdict);
               return (
                 <Link
                   key={`${p.match.id}-${i}`}
@@ -187,7 +189,7 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
                       {teamCode(p.match.home)} {p.match.result_label ?? "–"} {teamCode(p.match.away)}
                     </div>
                     <div style={{ color: c.muted, fontSize: 11.5, marginTop: 2 }}>
-                      Picked {p.prediction.label} · {v.tag}
+                      {t.home.picked(p.prediction.label)} · {v.tag}
                     </div>
                   </div>
                   <div style={{ fontFamily: font.display, fontWeight: 700, fontSize: 15, color: v.color, flexShrink: 0 }}>
@@ -198,7 +200,7 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
             })}
             {profile.predictions.length > recent.length && (
               <div style={{ textAlign: "center", color: c.muted2, fontSize: 12, padding: "6px 0" }}>
-                +{profile.predictions.length - recent.length} earlier predictions
+                {t.userProfile.earlierPredictions(profile.predictions.length - recent.length)}
               </div>
             )}
           </div>

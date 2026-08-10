@@ -4,13 +4,22 @@ import { useActionState } from "react";
 import { guestAction, loginAction, type AuthState } from "@/lib/actions";
 import { c, font } from "@/lib/theme";
 import { Notice, PrimaryButton } from "@/components/ui";
+import { useI18n } from "@/lib/i18n/LanguageProvider";
+
+const COUNTRIES = [
+  { code: "sa", dial: "966", flag: "🇸🇦" },
+  { code: "ae", dial: "971", flag: "🇦🇪" },
+  { code: "pl", dial: "48", flag: "🇵🇱" },
+] as const;
 
 export default function LoginForm() {
+  const { t } = useI18n();
   const [state, submitLogin, pending] = useActionState<AuthState, FormData>(loginAction, undefined);
   const [guestState, submitGuest, guestPending] = useActionState<AuthState, FormData>(guestAction, undefined);
 
   const error = state?.error ?? guestState?.error;
   const busy = pending || guestPending;
+  const countryName = { sa: t.login.countrySa, ae: t.login.countryAe, pl: t.login.countryPl };
 
   return (
     <div className="screen">
@@ -33,13 +42,11 @@ export default function LoginForm() {
           ⚽
         </div>
         <h1 style={{ fontFamily: font.display, fontSize: 30, fontWeight: 700, lineHeight: 1.1 }}>
-          World Cup
+          {t.login.brandLine1}
           <br />
-          Predictor
+          {t.login.brandLine2}
         </h1>
-        <p style={{ color: c.muted, fontSize: 13.5, marginTop: 10, lineHeight: 1.5 }}>
-          Predict scores, climb the leaderboard, and settle friendly $1 bets.
-        </p>
+        <p style={{ color: c.muted, fontSize: 13.5, marginTop: 10, lineHeight: 1.5 }}>{t.login.tagline}</p>
 
         {error && (
           <Notice tone="error" style={{ marginTop: 20 }}>
@@ -50,10 +57,25 @@ export default function LoginForm() {
         <form action={submitLogin} style={{ marginTop: 22, display: "flex", flexDirection: "column", gap: 12 }}>
           <div>
             <label
+              htmlFor="country"
+              style={{ display: "block", color: c.muted, fontSize: 11, fontWeight: 700, letterSpacing: 0.8, marginBottom: 7 }}
+            >
+              {t.login.countryLabel}
+            </label>
+            <select id="country" name="country" className="field" required disabled={busy} defaultValue="sa">
+              {COUNTRIES.map((cty) => (
+                <option key={cty.code} value={cty.code}>
+                  {cty.flag} {countryName[cty.code]} (+{cty.dial})
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label
               htmlFor="mobile"
               style={{ display: "block", color: c.muted, fontSize: 11, fontWeight: 700, letterSpacing: 0.8, marginBottom: 7 }}
             >
-              MOBILE
+              {t.login.mobileLabel}
             </label>
             <input
               id="mobile"
@@ -62,7 +84,7 @@ export default function LoginForm() {
               type="tel"
               inputMode="numeric"
               autoComplete="username"
-              placeholder="09120000000"
+              placeholder={t.login.mobilePlaceholder}
               required
               disabled={busy}
             />
@@ -72,7 +94,7 @@ export default function LoginForm() {
               htmlFor="password"
               style={{ display: "block", color: c.muted, fontSize: 11, fontWeight: 700, letterSpacing: 0.8, marginBottom: 7 }}
             >
-              PASSWORD
+              {t.login.passwordLabel}
             </label>
             <input
               id="password"
@@ -86,14 +108,14 @@ export default function LoginForm() {
             />
           </div>
           <PrimaryButton type="submit" disabled={busy} style={{ marginTop: 6 }}>
-            {pending ? "Signing in…" : "Sign in"}
+            {pending ? t.login.signingIn : t.login.signIn}
           </PrimaryButton>
         </form>
 
         {/* divider */}
         <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "22px 0" }}>
           <div style={{ flex: 1, height: 1, background: c.border }} />
-          <span style={{ color: c.muted2, fontSize: 11, fontWeight: 600 }}>OR</span>
+          <span style={{ color: c.muted2, fontSize: 11, fontWeight: 600 }}>{t.login.or}</span>
           <div style={{ flex: 1, height: 1, background: c.border }} />
         </div>
 
@@ -115,11 +137,11 @@ export default function LoginForm() {
               opacity: busy ? 0.5 : 1,
             }}
           >
-            {guestPending ? "Continuing…" : "Continue as guest"}
+            {guestPending ? t.login.continuingGuest : t.login.continueGuest}
           </button>
         </form>
         <p style={{ color: c.muted2, fontSize: 11.5, textAlign: "center", marginTop: 12, lineHeight: 1.5 }}>
-          Guests can browse everything but can&apos;t submit predictions or bets.
+          {t.login.guestFootnote}
         </p>
       </div>
     </div>

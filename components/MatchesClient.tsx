@@ -8,10 +8,12 @@ import { classifyPick, formatPoints, parseApiTime, teamCode } from "@/lib/format
 import FlagDisc from "@/components/FlagDisc";
 import BackButton from "@/components/BackButton";
 import { EmptyState } from "@/components/ui";
+import { useI18n } from "@/lib/i18n/LanguageProvider";
 
 const ALL = "all";
 
 export default function MatchesClient({ matches }: { matches: Match[] }) {
+  const { t } = useI18n();
   const [round, setRound] = useState<string>(ALL);
   const [q, setQ] = useState("");
 
@@ -46,32 +48,32 @@ export default function MatchesClient({ matches }: { matches: Match[] }) {
     const predicted = rows.filter((m) => m.my_prediction);
     const points = predicted.reduce((sum, m) => sum + (m.my_prediction?.points_earned ?? 0), 0);
     const exact = predicted.filter(
-      (m) => classifyPick(m.my_prediction!, m, m.my_prediction!.points_earned ?? 0).tag === "Exact",
+      (m) => classifyPick(m.my_prediction!, m, m.my_prediction!.points_earned ?? 0, t.verdict).kind === "exact",
     ).length;
     return { total: rows.length, predicted: predicted.length, points, exact };
-  }, [rows]);
+  }, [rows, t.verdict]);
 
   return (
     <div className="screen">
       <div style={{ padding: "54px 16px 12px", background: c.headerGrad, flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12, gap: 10 }}>
           <BackButton fallback="/" />
-          <div style={{ fontFamily: font.display, fontSize: 21, fontWeight: 700 }}>Past matches</div>
-          <span style={{ color: c.muted2, fontSize: 12, fontWeight: 600, minWidth: 38, textAlign: "right" }}>{matches.length}</span>
+          <div style={{ fontFamily: font.display, fontSize: 21, fontWeight: 700 }}>{t.matches.title}</div>
+          <span style={{ color: c.muted2, fontSize: 12, fontWeight: 600, minWidth: 38, textAlign: "end" }}>{matches.length}</span>
         </div>
 
         <input
           className="field"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Search a team…"
-          aria-label="Search matches by team"
+          placeholder={t.matches.searchPlaceholder}
+          aria-label={t.a11y.searchMatches}
           style={{ marginBottom: 10, padding: "11px 13px", fontSize: 14 }}
         />
 
         {/* round filter */}
         <div style={{ display: "flex", gap: 7, overflowX: "auto", paddingBottom: 2 }}>
-          {[[ALL, "All"] as const, ...rounds].map(([value, label]) => {
+          {[[ALL, t.matches.all] as const, ...rounds].map(([value, label]) => {
             const on = round === value;
             return (
               <button
@@ -111,23 +113,23 @@ export default function MatchesClient({ matches }: { matches: Match[] }) {
         }}
       >
         <span>
-          <span style={{ color: c.text, fontWeight: 700 }}>{summary.total}</span> matches ·{" "}
-          <span style={{ color: c.text, fontWeight: 700 }}>{summary.predicted}</span> predicted
+          <span style={{ color: c.text, fontWeight: 700 }}>{summary.total}</span> {t.matches.matchesLabel}{" · "}
+          <span style={{ color: c.text, fontWeight: 700 }}>{summary.predicted}</span> {t.matches.predictedLabel}
         </span>
         <span>
-          <span style={{ color: c.cyan, fontWeight: 700, fontFamily: font.display }}>{summary.exact}</span> exact ·{" "}
-          <span style={{ color: c.lime, fontWeight: 700, fontFamily: font.display }}>{summary.points}</span> pts
+          <span style={{ color: c.cyan, fontWeight: 700, fontFamily: font.display }}>{summary.exact}</span> {t.matches.exactLabel}{" · "}
+          <span style={{ color: c.lime, fontWeight: 700, fontFamily: font.display }}>{summary.points}</span> {t.matches.ptsLabel}
         </span>
       </div>
 
       <div className="scroll" style={{ padding: "12px 16px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
         {rows.length === 0 ? (
-          <EmptyState>No matches match your filters.</EmptyState>
+          <EmptyState>{t.matches.noMatches}</EmptyState>
         ) : (
           rows.map((m) => {
             const pick = m.my_prediction;
             const earned = pick?.points_earned ?? 0;
-            const v = pick ? classifyPick(pick, m, earned) : null;
+            const v = pick ? classifyPick(pick, m, earned, t.verdict) : null;
             return (
               <Link
                 key={m.id}
@@ -145,7 +147,7 @@ export default function MatchesClient({ matches }: { matches: Match[] }) {
               >
                 <div style={{ display: "flex", alignItems: "center", flexShrink: 0 }}>
                   <FlagDisc team={m.home} size={30} />
-                  <div style={{ marginLeft: -9 }}>
+                  <div style={{ marginInlineStart: -9 }}>
                     <FlagDisc team={m.away} size={30} />
                   </div>
                 </div>
@@ -159,7 +161,7 @@ export default function MatchesClient({ matches }: { matches: Match[] }) {
                   </div>
                 </div>
 
-                <div style={{ textAlign: "right", flexShrink: 0 }}>
+                <div style={{ textAlign: "end", flexShrink: 0 }}>
                   {pick && v ? (
                     <>
                       <div style={{ fontFamily: font.display, fontWeight: 700, fontSize: 15, color: v.color }}>
@@ -170,7 +172,7 @@ export default function MatchesClient({ matches }: { matches: Match[] }) {
                       </div>
                     </>
                   ) : (
-                    <div style={{ color: c.muted2, fontSize: 11, fontWeight: 600 }}>No pick</div>
+                    <div style={{ color: c.muted2, fontSize: 11, fontWeight: 600 }}>{t.matches.noPick}</div>
                   )}
                 </div>
               </Link>

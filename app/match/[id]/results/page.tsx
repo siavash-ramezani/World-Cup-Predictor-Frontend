@@ -8,6 +8,7 @@ import Avatar from "@/components/Avatar";
 import FlagDisc from "@/components/FlagDisc";
 import BackButton from "@/components/BackButton";
 import { Notice } from "@/components/ui";
+import { getT } from "@/lib/i18n/server";
 
 type Row = { label: string; pct: number; count: number; color: string };
 
@@ -38,7 +39,7 @@ function BetList({ rows, dim }: { rows: Row[]; dim?: boolean }) {
             className="tabnum"
             style={{
               width: 58,
-              textAlign: "right",
+              textAlign: "end",
               fontFamily: font.display,
               fontSize: 11.5,
               fontWeight: 700,
@@ -56,6 +57,7 @@ function BetList({ rows, dim }: { rows: Row[]; dim?: boolean }) {
 export default async function MatchResultsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const session = await requireSession();
+  const t = await getT();
 
   const { data: match } = await apiGet<Wrapped<MatchDetail>>(`/matches/${id}/detail`);
   if (!match.is_finished) redirect(`/match/${id}`);
@@ -67,17 +69,17 @@ export default async function MatchResultsPage({ params }: { params: Promise<{ i
 
   const pointsRows: Row[] = wp
     ? [
-        { label: `${match.home.name} win`, pct: wp.home.percent, count: wp.home.count, color: c.lime },
-        { label: "Draw", pct: wp.draw.percent, count: wp.draw.count, color: c.dim },
-        { label: `${match.away.name} win`, pct: wp.away.percent, count: wp.away.count, color: c.cyan },
+        { label: t.verdict.teamWin(match.home.name), pct: wp.home.percent, count: wp.home.count, color: c.lime },
+        { label: t.verdict.draw, pct: wp.draw.percent, count: wp.draw.count, color: c.dim },
+        { label: t.verdict.teamWin(match.away.name), pct: wp.away.percent, count: wp.away.count, color: c.cyan },
       ]
     : [];
 
   const dollarRows: Row[] = dollar
     ? [
-        { label: `${match.home.name} win`, pct: dollarPct(dollar.home), count: dollar.home, color: c.lime },
-        { label: "Draw", pct: dollarPct(dollar.draw), count: dollar.draw, color: c.dim },
-        { label: `${match.away.name} win`, pct: dollarPct(dollar.away), count: dollar.away, color: c.cyan },
+        { label: t.verdict.teamWin(match.home.name), pct: dollarPct(dollar.home), count: dollar.home, color: c.lime },
+        { label: t.verdict.draw, pct: dollarPct(dollar.draw), count: dollar.draw, color: c.dim },
+        { label: t.verdict.teamWin(match.away.name), pct: dollarPct(dollar.away), count: dollar.away, color: c.cyan },
       ]
     : [];
 
@@ -89,7 +91,7 @@ export default async function MatchResultsPage({ params }: { params: Promise<{ i
         {/* top bar */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
           <BackButton />
-          <div style={{ color: c.muted, fontSize: 13, fontWeight: 600 }}>Match result</div>
+          <div style={{ color: c.muted, fontSize: 13, fontWeight: 600 }}>{t.matchResults.title}</div>
           <div style={{ width: 38 }} />
         </div>
 
@@ -107,12 +109,10 @@ export default async function MatchResultsPage({ params }: { params: Promise<{ i
                 borderRadius: 999,
               }}
             >
-              ● FULL TIME
+              ● {t.matchResults.fullTime}
             </span>
             {match.my_prediction && (
-              <span style={{ color: c.muted2, fontSize: 11 }}>
-                You picked {match.my_prediction.label}
-              </span>
+              <span style={{ color: c.muted2, fontSize: 11 }}>{t.matchResults.youPicked(match.my_prediction.label)}</span>
             )}
           </div>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-around", gap: 6 }}>
@@ -125,7 +125,7 @@ export default async function MatchResultsPage({ params }: { params: Promise<{ i
                 {match.home_score} <span style={{ color: c.dim }}>—</span> {match.away_score}
               </div>
               {community && (
-                <div style={{ color: c.muted2, fontSize: 11, marginTop: 6 }}>{community.total_predictions} predictions</div>
+                <div style={{ color: c.muted2, fontSize: 11, marginTop: 6 }}>{t.matchResults.predictionsCount(community.total_predictions)}</div>
               )}
             </div>
             <Link href={`/teams/${encodeURIComponent(match.away.name)}`} className="pressable" style={teamColumn}>
@@ -148,15 +148,15 @@ export default async function MatchResultsPage({ params }: { params: Promise<{ i
         </div>
 
         {!community ? (
-          <Notice style={{ marginTop: 14 }}>Community results aren&apos;t available for this match.</Notice>
+          <Notice style={{ marginTop: 14 }}>{t.matchResults.communityUnavailable}</Notice>
         ) : (
           <>
             {/* points predictions */}
             <div style={{ marginTop: 14, borderRadius: 18, padding: 16, background: c.surface, border: `1px solid ${c.border}` }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-                <div style={{ fontFamily: font.display, fontSize: 14, fontWeight: 600 }}>📊 Points predictions</div>
+                <div style={{ fontFamily: font.display, fontSize: 14, fontWeight: 600 }}>📊 {t.matchResults.pointsPredictions}</div>
                 <span style={{ color: c.lime, fontFamily: font.display, fontWeight: 700, fontSize: 14 }}>
-                  {community.total_predictions} in
+                  {t.matchResults.inCount(community.total_predictions)}
                 </span>
               </div>
               <BetList rows={pointsRows} />
@@ -165,9 +165,9 @@ export default async function MatchResultsPage({ params }: { params: Promise<{ i
             {/* dollar bets */}
             <div style={{ marginTop: 12, borderRadius: 18, padding: 16, background: c.surface, border: `1px solid ${c.border}` }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-                <div style={{ fontFamily: font.display, fontSize: 14, fontWeight: 600 }}>💵 $1 bets</div>
+                <div style={{ fontFamily: font.display, fontSize: 14, fontWeight: 600 }}>💵 {t.matchResults.dollarBets}</div>
                 <span style={{ color: c.muted2, fontFamily: font.display, fontWeight: 700, fontSize: 14 }}>
-                  {dollar?.total ?? 0} bets
+                  {t.matchResults.betsCount(dollar?.total ?? 0)}
                 </span>
               </div>
               <BetList rows={dollarRows} dim />
@@ -175,11 +175,11 @@ export default async function MatchResultsPage({ params }: { params: Promise<{ i
 
             {/* all predictions */}
             <div style={{ margin: "20px 2px 10px", fontFamily: font.display, fontSize: 14, fontWeight: 600 }}>
-              All predictions
+              {t.matchResults.allPredictions}
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {community.picks.map((p) => {
-                const v = classifyPick(p.prediction, match, p.points_earned);
+                const v = classifyPick(p.prediction, match, p.points_earned, t.verdict);
                 const you = p.user.id === session.user?.id;
                 return (
                   <Link
@@ -207,7 +207,7 @@ export default async function MatchResultsPage({ params }: { params: Promise<{ i
                           whiteSpace: "nowrap",
                         }}
                       >
-                        {you ? "You" : p.user.name}
+                        {you ? t.common.you : p.user.name}
                       </div>
                       <div style={{ color: c.muted2, fontSize: 11, marginTop: 1 }}>{v.tag}</div>
                     </div>
@@ -217,7 +217,7 @@ export default async function MatchResultsPage({ params }: { params: Promise<{ i
                     <div
                       style={{
                         width: 34,
-                        textAlign: "right",
+                        textAlign: "end",
                         fontFamily: font.display,
                         fontWeight: 700,
                         fontSize: 14,

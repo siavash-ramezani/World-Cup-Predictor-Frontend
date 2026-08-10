@@ -9,8 +9,10 @@ import FlagDisc from "@/components/FlagDisc";
 import BackButton from "@/components/BackButton";
 import { EmptyState, SegTabs } from "@/components/ui";
 import { ChevronRight } from "@/components/icons";
+import { useI18n } from "@/lib/i18n/LanguageProvider";
 
 export default function TeamsClient({ teams }: { teams: TeamListItem[] }) {
+  const { t } = useI18n();
   const [sort, setSort] = useState(0);
   const [q, setQ] = useState("");
 
@@ -28,28 +30,28 @@ export default function TeamsClient({ teams }: { teams: TeamListItem[] }) {
       <div style={{ padding: "54px 20px 14px", background: c.headerGrad, flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14, gap: 10 }}>
           <BackButton fallback="/profile" />
-          <div style={{ fontFamily: font.display, fontSize: 22, fontWeight: 700 }}>Teams</div>
-          <span style={{ color: c.muted2, fontSize: 12, fontWeight: 600, minWidth: 38, textAlign: "right" }}>{teams.length}</span>
+          <div style={{ fontFamily: font.display, fontSize: 22, fontWeight: 700 }}>{t.teams.title}</div>
+          <span style={{ color: c.muted2, fontSize: 12, fontWeight: 600, minWidth: 38, textAlign: "end" }}>{teams.length}</span>
         </div>
         <input
           className="field"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Search teams…"
-          aria-label="Search teams"
+          placeholder={t.teams.searchPlaceholder}
+          aria-label={t.a11y.searchTeams}
           style={{ marginBottom: 10, padding: "11px 13px", fontSize: 14 }}
         />
-        <SegTabs tabs={["A–Z", "Best record"]} active={sort} onChange={setSort} fontSize={13} />
+        <SegTabs tabs={[t.teams.sortAZ, t.teams.sortBest]} active={sort} onChange={setSort} fontSize={13} />
       </div>
 
       <div className="scroll" style={{ padding: "14px 16px 12px", display: "flex", flexDirection: "column", gap: 8 }}>
         {rows.length === 0 ? (
-          <EmptyState>No teams match “{q}”.</EmptyState>
+          <EmptyState>{t.teams.noTeamsMatch(q)}</EmptyState>
         ) : (
-          rows.map((t) => (
+          rows.map((team) => (
             <Link
-              key={t.name}
-              href={`/teams/${encodeURIComponent(t.name)}`}
+              key={team.name}
+              href={`/teams/${encodeURIComponent(team.name)}`}
               className="pressable"
               style={{
                 display: "flex",
@@ -61,32 +63,32 @@ export default function TeamsClient({ teams }: { teams: TeamListItem[] }) {
                 padding: "10px 13px",
               }}
             >
-              <FlagDisc team={t} size={38} />
+              <FlagDisc team={team} size={38} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontWeight: 700, fontSize: 14, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {t.name}
+                  {team.name}
                 </div>
                 <div style={{ color: c.muted, fontSize: 11, marginTop: 2 }}>
-                  {teamCode(t)} · {t.played} played · {t.wins}W
+                  {teamCode(team)} · {t.teams.playedShort(team.played)} · {team.wins}W
                 </div>
               </div>
-              <div style={{ textAlign: "right", flexShrink: 0 }}>
+              <div style={{ textAlign: "end", flexShrink: 0 }}>
                 <div
                   className="tabnum"
                   style={{
                     fontFamily: font.display,
                     fontWeight: 700,
                     fontSize: 14,
-                    color: t.gd > 0 ? c.lime : t.gd < 0 ? c.red : c.muted2,
+                    color: team.gd > 0 ? c.lime : team.gd < 0 ? c.red : c.muted2,
                   }}
                 >
-                  {t.gd > 0 ? `+${t.gd}` : t.gd}
+                  {team.gd > 0 ? `+${team.gd}` : team.gd}
                 </div>
                 <div style={{ color: c.muted2, fontSize: 10, marginTop: 1 }}>
-                  {t.gf}:{t.ga}
+                  {team.gf}:{team.ga}
                 </div>
               </div>
-              <span style={{ color: c.muted2, flexShrink: 0 }}>
+              <span className="rtl-flip" style={{ color: c.muted2, flexShrink: 0, display: "flex" }}>
                 <ChevronRight size={13} />
               </span>
             </Link>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { countdownLabel } from "@/lib/format";
+import { useI18n } from "@/lib/i18n/LanguageProvider";
 
 /**
  * Live "2h 14m" ticker. Renders a neutral placeholder until mounted so the
@@ -9,13 +10,14 @@ import { countdownLabel } from "@/lib/format";
  */
 export default function Countdown({
   deadlineMs,
-  lockedText = "Locked",
+  lockedText,
   uppercase = false,
 }: {
   deadlineMs: number;
   lockedText?: string;
   uppercase?: boolean;
 }) {
+  const { t } = useI18n();
   const [now, setNow] = useState<number | null>(null);
 
   useEffect(() => {
@@ -26,6 +28,6 @@ export default function Countdown({
 
   if (now === null) return <span suppressHydrationWarning>…</span>;
 
-  const label = countdownLabel(deadlineMs, now) ?? lockedText;
+  const label = countdownLabel(deadlineMs, now, t.countdown) ?? lockedText ?? t.countdown.locked;
   return <span suppressHydrationWarning>{uppercase ? label.toUpperCase() : label}</span>;
 }

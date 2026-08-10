@@ -1,8 +1,11 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/api";
 import LoginForm from "@/components/LoginForm";
+import { getT } from "@/lib/i18n/server";
 
-export const metadata = { title: "Sign in · World Cup Predictor" };
+export async function generateMetadata() {
+  return { title: (await getT()).login.metaTitle };
+}
 
 export default async function LoginPage() {
   const session = await getSession();

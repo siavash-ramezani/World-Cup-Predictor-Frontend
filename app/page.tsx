@@ -7,11 +7,13 @@ import Avatar from "@/components/Avatar";
 import FlagDisc from "@/components/FlagDisc";
 import Countdown from "@/components/Countdown";
 import { EmptyState, Notice, Pill } from "@/components/ui";
+import { getT } from "@/lib/i18n/server";
 
 export default async function HomePage() {
   await requireSession();
   const { data } = await apiGet<Wrapped<Dashboard>>("/dashboard");
   const { user, next_match: next, recent_results: recents } = data;
+  const t = await getT();
 
   return (
     <div className="screen">
@@ -19,7 +21,7 @@ export default async function HomePage() {
         {/* greeting */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
           <div style={{ minWidth: 0 }}>
-            <div style={{ color: c.muted, fontSize: 13, fontWeight: 500 }}>{greeting()}</div>
+            <div style={{ color: c.muted, fontSize: 13, fontWeight: 500 }}>{greeting(t.greeting)}</div>
             <div
               style={{
                 fontFamily: font.display,
@@ -59,7 +61,7 @@ export default async function HomePage() {
               background: "radial-gradient(circle,rgba(181,255,61,0.22),transparent 70%)",
             }}
           />
-          <div style={{ color: c.muted, fontSize: 11, fontWeight: 700, letterSpacing: 1.2 }}>TOTAL POINTS</div>
+          <div style={{ color: c.muted, fontSize: 11, fontWeight: 700, letterSpacing: 1.2 }}>{t.home.totalPoints}</div>
           <div
             className="tabnum"
             style={{ fontFamily: font.display, fontSize: 50, fontWeight: 700, lineHeight: 1, margin: "6px 0 14px" }}
@@ -67,13 +69,13 @@ export default async function HomePage() {
             {user.total_points}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-            <Pill>{user.rank ? `Rank #${user.rank} of ${user.total_players}` : `${user.total_players} players`}</Pill>
+            <Pill>{user.rank ? t.home.rankOf(user.rank, user.total_players) : t.home.playersCount(user.total_players)}</Pill>
             {user.points_this_week > 0 ? (
               <Pill bg={c.limeTint} color={c.lime} style={{ fontWeight: 700, fontFamily: font.display }}>
-                ▲ +{user.points_this_week} this wk
+                {t.home.pointsThisWeek(user.points_this_week)}
               </Pill>
             ) : (
-              <Pill style={{ color: c.muted }}>No points this week</Pill>
+              <Pill style={{ color: c.muted }}>{t.home.noPointsThisWeek}</Pill>
             )}
           </div>
         </div>
@@ -92,20 +94,20 @@ export default async function HomePage() {
             <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 12 }}>
               <span style={{ width: 7, height: 7, borderRadius: "50%", background: c.red, boxShadow: `0 0 8px ${c.red}` }} />
               <span style={{ color: c.red, fontSize: 12, fontWeight: 700, letterSpacing: 0.3 }}>
-                LOCKS IN <Countdown deadlineMs={parseApiTime(next.prediction_deadline)} lockedText="Locked" uppercase />
+                {t.home.locksIn} <Countdown deadlineMs={parseApiTime(next.prediction_deadline)} lockedText={t.countdown.locked} uppercase />
               </span>
             </div>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "center" }}>
                   <FlagDisc team={next.home} size={34} />
-                  <div style={{ marginLeft: -10 }}>
+                  <div style={{ marginInlineStart: -10 }}>
                     <FlagDisc team={next.away} size={34} />
                   </div>
                 </div>
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontWeight: 700, fontSize: 14, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                    {next.home.name} v {next.away.name}
+                    {next.home.name} {t.teamDetail.vs} {next.away.name}
                   </div>
                   <div style={{ color: c.muted, fontSize: 12 }}>
                     {next.round_label} · {next.match_time_label}
@@ -126,32 +128,32 @@ export default async function HomePage() {
                   flexShrink: 0,
                 }}
               >
-                {next.my_prediction ? "Edit" : "Predict"}
+                {next.my_prediction ? t.home.edit : t.home.predict}
               </Link>
             </div>
           </div>
         ) : (
-          <Notice style={{ marginTop: 14 }}>No upcoming fixtures right now — check back soon.</Notice>
+          <Notice style={{ marginTop: 14 }}>{t.home.noUpcoming}</Notice>
         )}
 
         {/* recent results */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "22px 2px 10px" }}>
-          <div style={{ fontFamily: font.display, fontSize: 15, fontWeight: 600 }}>Recent results</div>
+          <div style={{ fontFamily: font.display, fontSize: 15, fontWeight: 600 }}>{t.home.recentResults}</div>
           <Link href="/matches" style={{ color: c.lime, fontSize: 12, fontWeight: 700 }}>
-            See all →
+            {t.home.seeAll} {t.common.arrow}
           </Link>
         </div>
 
         {recents.length === 0 ? (
           <EmptyState>
-            No settled predictions yet.
+            {t.home.noSettled}
             <br />
-            Make a pick and your results will show up here.
+            {t.home.makeAPick}
           </EmptyState>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {recents.map((r, i) => {
-              const v = classifyPickLong(r.prediction, r.match, r.points_earned);
+              const v = classifyPickLong(r.prediction, r.match, r.points_earned, t.verdict);
               return (
                 <Link
                   key={`${r.match.id}-${i}`}
@@ -173,7 +175,7 @@ export default async function HomePage() {
                       {teamCode(r.match.home)} {r.match.result_label ?? "–"} {teamCode(r.match.away)}
                     </div>
                     <div style={{ color: c.muted, fontSize: 12, marginTop: 3 }}>
-                      Picked {r.prediction.label} · {v.tag}
+                      {t.home.picked(r.prediction.label)} · {v.tag}
                     </div>
                   </div>
                   <div style={{ fontFamily: font.display, fontWeight: 700, fontSize: 16, color: v.color, flexShrink: 0 }}>

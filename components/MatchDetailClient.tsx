@@ -13,6 +13,7 @@ import FlagDisc from "@/components/FlagDisc";
 import Countdown from "@/components/Countdown";
 import BackButton from "@/components/BackButton";
 import { Notice, PrimaryButton, ScoreStepper } from "@/components/ui";
+import { useI18n } from "@/lib/i18n/LanguageProvider";
 
 const teamColumn = {
   display: "flex",
@@ -32,6 +33,7 @@ const teamName = {
 
 export default function MatchDetailClient({ match, isGuest }: { match: MatchDetail; isGuest: boolean }) {
   const router = useRouter();
+  const { t } = useI18n();
   const id = String(match.id);
   const { scores, bump } = useScores({
     [id]: { h: match.my_prediction?.home ?? 0, a: match.my_prediction?.away ?? 0 },
@@ -49,7 +51,7 @@ export default function MatchDetailClient({ match, isGuest }: { match: MatchDeta
     startTransition(async () => {
       const res = await savePredictionAction(match.id, s.h, s.a);
       if (res.ok) {
-        setMsg({ tone: "lime", text: "Prediction saved." });
+        setMsg({ tone: "lime", text: t.matchDetail.predictionSaved });
         router.refresh();
       } else setMsg({ tone: "error", text: res.error });
     });
@@ -68,7 +70,7 @@ export default function MatchDetailClient({ match, isGuest }: { match: MatchDeta
   const segments = wp
     ? [
         { key: "home", label: `${teamCode(match.home)} ${wp.home.percent}%`, pct: wp.home.percent, color: c.lime, text: c.lime },
-        { key: "draw", label: `Draw ${wp.draw.percent}%`, pct: wp.draw.percent, color: c.dim, text: c.muted },
+        { key: "draw", label: `${t.verdict.draw} ${wp.draw.percent}%`, pct: wp.draw.percent, color: c.dim, text: c.muted },
         { key: "away", label: `${teamCode(match.away)} ${wp.away.percent}%`, pct: wp.away.percent, color: c.cyan, text: c.cyan },
       ]
     : [];
@@ -94,7 +96,7 @@ export default function MatchDetailClient({ match, isGuest }: { match: MatchDeta
               fontFamily: font.display,
               whiteSpace: "nowrap",
             }}
-            title={`${match.dollar_bet_count} players staked $1 on this match`}
+            title={t.matchDetail.stakedTooltip(match.dollar_bet_count)}
           >
             💵 {match.dollar_bet_count}
           </span>
@@ -119,8 +121,9 @@ export default function MatchDetailClient({ match, isGuest }: { match: MatchDeta
           {match.venue ?? match.round_label}
           {match.is_prediction_open && (
             <>
-              {" · locks in "}
-              <Countdown deadlineMs={parseApiTime(match.prediction_deadline)} lockedText="now" />
+              {" · "}
+              {t.matchDetail.locksInLower}{" "}
+              <Countdown deadlineMs={parseApiTime(match.prediction_deadline)} lockedText={t.matchDetail.now} />
             </>
           )}
         </div>
@@ -128,21 +131,21 @@ export default function MatchDetailClient({ match, isGuest }: { match: MatchDeta
         {msg && <Notice tone={msg.tone} style={{ marginBottom: 12 }}>{msg.text}</Notice>}
         {isGuest && (
           <Notice style={{ marginBottom: 12 }}>
-            Guests can&apos;t predict.{" "}
+            {t.matchDetail.guestCantPredict}{" "}
             <Link href="/login" style={{ color: c.lime, fontWeight: 700 }}>
-              Sign in
+              {t.common.signIn}
             </Link>{" "}
-            to play.
+            {t.matchDetail.toPlay}
           </Notice>
         )}
         {!match.is_prediction_open && !isGuest && (
-          <Notice style={{ marginBottom: 12 }}>Predictions for this match are locked.</Notice>
+          <Notice style={{ marginBottom: 12 }}>{t.matchDetail.predictionsLocked}</Notice>
         )}
 
         {/* your prediction */}
         <div style={{ borderRadius: 20, padding: 18, background: c.heroGrad, border: `1px solid ${c.limeBorder}` }}>
           <div style={{ textAlign: "center", color: c.muted, fontSize: 11, fontWeight: 700, letterSpacing: 1.2, marginBottom: 14 }}>
-            YOUR PREDICTION
+            {t.matchDetail.yourPrediction}
           </div>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 18 }}>
             <ScoreStepper size="lg" value={s.h} disabled={!editable} onInc={() => bump(id, "h", 1)} onDec={() => bump(id, "h", -1)} />
@@ -150,7 +153,7 @@ export default function MatchDetailClient({ match, isGuest }: { match: MatchDeta
             <ScoreStepper size="lg" value={s.a} disabled={!editable} onInc={() => bump(id, "a", 1)} onDec={() => bump(id, "a", -1)} />
           </div>
           <div style={{ textAlign: "center", color: c.muted, fontSize: 12, marginTop: 12 }}>
-            {verdictLabel(match.home.name, match.away.name, s.h, s.a)}
+            {verdictLabel(match.home.name, match.away.name, s.h, s.a, t.verdict)}
           </div>
         </div>
 
@@ -169,9 +172,9 @@ export default function MatchDetailClient({ match, isGuest }: { match: MatchDeta
             }}
           >
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13.5, fontWeight: 600 }}>💵 $1 bet</div>
+              <div style={{ fontSize: 13.5, fontWeight: 600 }}>💵 {t.matchDetail.dollarBet}</div>
               <div style={{ color: c.muted, fontSize: 11.5, marginTop: 2 }}>
-                {betActive ? "You're in — losers pay the pot." : "Stake $1 on your predicted outcome."}
+                {betActive ? t.matchDetail.betActiveHint : t.matchDetail.betInactiveHint}
               </div>
             </div>
             <button
@@ -190,7 +193,7 @@ export default function MatchDetailClient({ match, isGuest }: { match: MatchDeta
                 flexShrink: 0,
               }}
             >
-              {betActive ? "Joined" : "Join"}
+              {betActive ? t.predict.joined : t.predict.join}
             </button>
           </div>
         )}
@@ -198,8 +201,8 @@ export default function MatchDetailClient({ match, isGuest }: { match: MatchDeta
         {/* win probability */}
         <div style={{ marginTop: 16 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 9 }}>
-            <span style={{ fontFamily: font.display, fontSize: 13, fontWeight: 600, color: c.text2 }}>Win probability</span>
-            <span style={{ color: c.muted2, fontSize: 11 }}>community</span>
+            <span style={{ fontFamily: font.display, fontSize: 13, fontWeight: 600, color: c.text2 }}>{t.matchDetail.winProbability}</span>
+            <span style={{ color: c.muted2, fontSize: 11 }}>{t.matchDetail.community}</span>
           </div>
           {community && wp ? (
             <>
@@ -217,15 +220,15 @@ export default function MatchDetailClient({ match, isGuest }: { match: MatchDeta
               </div>
             </>
           ) : (
-            <Notice>🔒 Everyone&apos;s picks stay hidden until the deadline — no peeking.</Notice>
+            <Notice>🔒 {t.matchDetail.hiddenPicks}</Notice>
           )}
         </div>
 
         {/* points on offer */}
         <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
           {[
-            { pts: `+${match.scoring.exact_points}`, label: "Exact score", color: c.lime },
-            { pts: `+${match.scoring.result_points}`, label: "Right result", color: c.cyan },
+            { pts: `+${match.scoring.exact_points}`, label: t.matchDetail.exactScore, color: c.lime },
+            { pts: `+${match.scoring.result_points}`, label: t.matchDetail.rightResult, color: c.cyan },
           ].map((o) => (
             <div key={o.label} style={{ flex: 1, background: c.surface, border: `1px solid ${c.border}`, borderRadius: 14, padding: 13 }}>
               <div style={{ fontFamily: font.display, fontWeight: 700, fontSize: 20, color: o.color }}>{o.pts}</div>
@@ -238,11 +241,11 @@ export default function MatchDetailClient({ match, isGuest }: { match: MatchDeta
         {community && community.picks.length > 0 && (
           <>
             <div style={{ margin: "20px 2px 10px", fontFamily: font.display, fontSize: 14, fontWeight: 600 }}>
-              Everyone&apos;s picks
+              {t.matchDetail.everyonesPicks}
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {community.picks.slice(0, 12).map((p) => {
-                const v = classifyPick(p.prediction, match, p.points_earned);
+                const v = classifyPick(p.prediction, match, p.points_earned, t.verdict);
                 return (
                   <Link
                     key={p.user.id}
@@ -270,7 +273,7 @@ export default function MatchDetailClient({ match, isGuest }: { match: MatchDeta
               })}
               {community.picks.length > 12 && (
                 <div style={{ textAlign: "center", color: c.muted2, fontSize: 12, padding: "6px 0" }}>
-                  +{community.picks.length - 12} more
+                  {t.matchDetail.more(community.picks.length - 12)}
                 </div>
               )}
             </div>
@@ -281,7 +284,7 @@ export default function MatchDetailClient({ match, isGuest }: { match: MatchDeta
       {/* save */}
       <div style={{ padding: "8px 16px 14px", background: c.bg, flexShrink: 0 }}>
         <PrimaryButton onClick={save} disabled={!editable}>
-          {pending ? "Saving…" : match.my_prediction ? "Update prediction" : "Save prediction"}
+          {pending ? t.matchDetail.saving : match.my_prediction ? t.matchDetail.updatePrediction : t.matchDetail.savePrediction}
         </PrimaryButton>
       </div>
     </div>

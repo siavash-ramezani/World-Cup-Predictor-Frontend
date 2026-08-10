@@ -2,8 +2,10 @@
 
 import { useEffect } from "react";
 import { c, font } from "@/lib/theme";
+import { useI18n } from "@/lib/i18n/LanguageProvider";
 
 export default function Error({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+  const { t } = useI18n();
   useEffect(() => {
     console.error(error);
   }, [error]);
@@ -15,11 +17,8 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
         style={{ padding: "80px 24px", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}
       >
         <div style={{ fontSize: 40, marginBottom: 16 }}>⚠️</div>
-        <h1 style={{ fontFamily: font.display, fontSize: 22, fontWeight: 700 }}>Something went wrong</h1>
-        <p style={{ color: c.muted, fontSize: 13.5, marginTop: 10, lineHeight: 1.6, maxWidth: 300 }}>
-          We couldn&apos;t load this screen. If the prediction API isn&apos;t running, start the Laravel server and try
-          again.
-        </p>
+        <h1 style={{ fontFamily: font.display, fontSize: 22, fontWeight: 700 }}>{t.error.title}</h1>
+        <p style={{ color: c.muted, fontSize: 13.5, marginTop: 10, lineHeight: 1.6, maxWidth: 300 }}>{t.error.body}</p>
         {error.message && (
           <p
             style={{
@@ -48,7 +47,7 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
             fontSize: 14,
           }}
         >
-          Try again
+          {t.error.tryAgain}
         </button>
       </div>
     </div>

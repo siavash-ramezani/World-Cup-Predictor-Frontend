@@ -7,9 +7,12 @@ import { formatBalance } from "@/lib/format";
 import Avatar from "@/components/Avatar";
 import { Notice, Pill } from "@/components/ui";
 import { ChevronRight } from "@/components/icons";
+import EditNameForm from "@/components/EditNameForm";
+import { getT } from "@/lib/i18n/server";
 
 export default async function ProfilePage() {
   await requireSession();
+  const t = await getT();
 
   const [meRes, lb, dl] = await Promise.all([
     apiGet<Wrapped<ApiUser>>("/me"),
@@ -26,23 +29,23 @@ export default async function ProfilePage() {
   const winPct = settled ? Math.round(((bets?.wins ?? 0) / settled) * 100) : 0;
 
   const tiles = [
-    { v: String(me.total_points ?? 0), label: "total points", color: c.lime },
-    { v: String(preds), label: "predictions", color: c.text },
-    { v: formatBalance(balance), label: "$1 balance", color: balance >= 0 ? c.cyan : c.red },
+    { v: String(me.total_points ?? 0), label: t.profile.totalPointsLabel, color: c.lime },
+    { v: String(preds), label: t.profile.predictionsLabel, color: c.text },
+    { v: formatBalance(balance), label: t.profile.balanceLabel, color: balance >= 0 ? c.cyan : c.red },
   ];
 
   const links = [
-    ...(me.is_guest ? [] : [{ label: "Your public profile", href: `/users/${me.id}`, sw: c.purple }]),
-    { label: "Past matches", href: "/matches", sw: c.red },
-    { label: "Teams", href: "/teams", sw: c.gold },
-    { label: "Make picks", href: "/predict", sw: c.lime },
-    { label: "Leaderboards", href: "/ranks", sw: c.cyan },
+    ...(me.is_guest ? [] : [{ label: t.profile.linkPublicProfile, href: `/users/${me.id}`, sw: c.purple }]),
+    { label: t.profile.linkPastMatches, href: "/matches", sw: c.red },
+    { label: t.profile.linkTeams, href: "/teams", sw: c.gold },
+    { label: t.profile.linkMakePicks, href: "/predict", sw: c.lime },
+    { label: t.profile.linkLeaderboards, href: "/ranks", sw: c.cyan },
   ];
 
   return (
     <div className="screen">
       <div style={{ padding: "56px 20px 14px", background: c.headerGrad, flexShrink: 0 }}>
-        <div style={{ fontFamily: font.display, fontSize: 26, fontWeight: 700 }}>Profile</div>
+        <div style={{ fontFamily: font.display, fontSize: 26, fontWeight: 700 }}>{t.profile.title}</div>
       </div>
 
       <div className="scroll" style={{ padding: "16px 16px 20px" }}>
@@ -73,24 +76,25 @@ export default async function ProfilePage() {
               {me.name}
             </div>
             <div style={{ color: c.muted, fontSize: 13, marginTop: 2 }}>
-              {me.is_guest ? "Guest · read-only" : (me.mobile ?? "Player")}
+              {me.is_guest ? t.profile.guestReadOnly : (me.mobile ?? t.profile.player)}
             </div>
             <div style={{ display: "flex", gap: 7, marginTop: 10, flexWrap: "wrap" }}>
               {rank && (
                 <Pill bg={c.limeTint} color={c.lime} style={{ fontFamily: font.display, fontWeight: 700 }}>
-                  Rank #{rank}
+                  {t.profile.rankHash(rank)}
                 </Pill>
               )}
-              <Pill>of {lb.meta.total_players} players</Pill>
+              <Pill>{t.profile.ofPlayers(lb.meta.total_players)}</Pill>
             </div>
+            {!me.is_guest && <EditNameForm initialName={me.name} />}
           </div>
         </div>
 
         {me.is_guest && (
           <Notice tone="lime" style={{ marginTop: 14 }}>
-            You&apos;re a guest — browsing is free, but predictions and $1 bets need a full account.{" "}
+            {t.profile.guestNotice}{" "}
             <Link href="/login" style={{ color: c.lime, fontWeight: 700, textDecoration: "underline" }}>
-              Sign in
+              {t.common.signIn}
             </Link>
           </Notice>
         )}
@@ -108,23 +112,23 @@ export default async function ProfilePage() {
         </div>
 
         {/* $1 bet record */}
-        <div style={{ fontFamily: font.display, fontSize: 15, fontWeight: 600, margin: "22px 2px 10px" }}>$1 bet record</div>
+        <div style={{ fontFamily: font.display, fontSize: 15, fontWeight: 600, margin: "22px 2px 10px" }}>{t.profile.betRecord}</div>
         {bets ? (
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             <Pill bg={c.limeTint} color={c.lime} style={{ fontFamily: font.display, fontWeight: 700, padding: "7px 13px" }}>
               {bets.wins}W · {bets.losses}L
             </Pill>
-            <Pill style={{ padding: "7px 13px" }}>{bets.participated} bets</Pill>
+            <Pill style={{ padding: "7px 13px" }}>{t.profile.betsSuffix(bets.participated)}</Pill>
             <Pill bg={c.cyanTint} color={c.cyan} style={{ fontFamily: font.display, fontWeight: 700, padding: "7px 13px" }}>
-              {winPct}% win
+              {t.profile.winPct(winPct)}
             </Pill>
           </div>
         ) : (
-          <Notice>No $1 bets yet. Join one from any open match.</Notice>
+          <Notice>{t.profile.noBetsYetJoin}</Notice>
         )}
 
         {/* links */}
-        <div style={{ fontFamily: font.display, fontSize: 15, fontWeight: 600, margin: "22px 2px 10px" }}>Shortcuts</div>
+        <div style={{ fontFamily: font.display, fontSize: 15, fontWeight: 600, margin: "22px 2px 10px" }}>{t.profile.shortcuts}</div>
         <div style={{ background: c.surface, border: `1px solid ${c.border}`, borderRadius: 18, overflow: "hidden" }}>
           {links.map((r, i) => (
             <Link
@@ -141,7 +145,7 @@ export default async function ProfilePage() {
             >
               <div style={{ width: 30, height: 30, borderRadius: 8, background: r.sw, flexShrink: 0, opacity: 0.9 }} />
               <div style={{ flex: 1, fontSize: 14.5, fontWeight: 500 }}>{r.label}</div>
-              <span style={{ color: c.muted2 }}>
+              <span className="rtl-flip" style={{ color: c.muted2, display: "flex" }}>
                 <ChevronRight size={13} />
               </span>
             </Link>
@@ -165,11 +169,11 @@ export default async function ProfilePage() {
               fontSize: 15,
             }}
           >
-            {me.is_guest ? "Exit guest session" : "Sign out"}
+            {me.is_guest ? t.profile.exitGuest : t.profile.signOut}
           </button>
         </form>
 
-        <div style={{ textAlign: "center", color: c.muted2, fontSize: 11, marginTop: 18 }}>World Cup Predictor · v1.0</div>
+        <div style={{ textAlign: "center", color: c.muted2, fontSize: 11, marginTop: 18 }}>{t.profile.footer}</div>
       </div>
     </div>
   );

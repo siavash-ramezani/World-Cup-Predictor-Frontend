@@ -4,19 +4,21 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { c, font } from "@/lib/theme";
 import { HomeIcon, PredictIcon, RanksIcon, ProfileIcon } from "@/components/icons";
-
-const TABS = [
-  { href: "/", label: "Home", Icon: HomeIcon },
-  { href: "/predict", label: "Predict", Icon: PredictIcon },
-  { href: "/ranks", label: "Ranks", Icon: RanksIcon },
-  { href: "/profile", label: "Profile", Icon: ProfileIcon },
-] as const;
+import { useI18n } from "@/lib/i18n/LanguageProvider";
 
 /** Full-screen routes: pushed detail views and the auth screens. */
 const HIDE_ON = ["/match", "/users", "/teams", "/login", "/session"];
 
 export default function TabBar() {
   const pathname = usePathname();
+  const { t } = useI18n();
+
+  const TABS = [
+    { href: "/", label: t.tabbar.home, Icon: HomeIcon },
+    { href: "/predict", label: t.tabbar.predict, Icon: PredictIcon },
+    { href: "/ranks", label: t.tabbar.ranks, Icon: RanksIcon },
+    { href: "/profile", label: t.tabbar.profile, Icon: ProfileIcon },
+  ] as const;
 
   if (HIDE_ON.some((p) => pathname.startsWith(p))) return null;
 

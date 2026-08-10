@@ -1,5 +1,8 @@
+"use client";
+
 import type { CSSProperties, ReactNode } from "react";
 import { c, font } from "@/lib/theme";
+import { useI18n } from "@/lib/i18n/LanguageProvider";
 
 /* Rounded pill chip. */
 export function Pill({
@@ -177,6 +180,7 @@ export function ScoreStepper({
   size?: "sm" | "lg";
   disabled?: boolean;
 }) {
+  const { t } = useI18n();
   const s = STEP[size];
   const btn = (label: string, onClick: () => void, fs: number, color: string, aria: string) => (
     <button
@@ -204,7 +208,7 @@ export function ScoreStepper({
   );
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: s.gap }}>
-      {btn("+", onInc, s.incFs, c.lime, "Increase")}
+      {btn("+", onInc, s.incFs, c.lime, t.a11y.increase)}
       <div
         className="tabnum"
         style={{
@@ -218,7 +222,7 @@ export function ScoreStepper({
       >
         {value}
       </div>
-      {btn("−", onDec, s.decFs, c.muted, "Decrease")}
+      {btn("−", onDec, s.decFs, c.muted, t.a11y.decrease)}
     </div>
   );
 }

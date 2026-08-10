@@ -1,9 +1,13 @@
-import type { Metadata, Viewport } from "next";
-import { Manrope, Space_Grotesk } from "next/font/google";
+import type { Viewport } from "next";
+import { Manrope, Space_Grotesk, Cairo } from "next/font/google";
 import "flag-icons/css/flag-icons.min.css";
 import "./globals.css";
 import TabBar from "@/components/TabBar";
 import NavigationProgress from "@/components/NavigationProgress";
+import LanguageFab from "@/components/LanguageFab";
+import { LanguageProvider } from "@/lib/i18n/LanguageProvider";
+import { getLocale, getT } from "@/lib/i18n/server";
+import { dirOf } from "@/lib/i18n/types";
 
 const manrope = Manrope({
   variable: "--font-manrope",
@@ -17,11 +21,16 @@ const grotesk = Space_Grotesk({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: "World Cup Predictor",
-  description:
-    "Predict scores, climb the leaderboard, and settle friendly $1 bets across the World Cup knockout stage.",
-};
+const cairo = Cairo({
+  variable: "--font-arabic",
+  subsets: ["arabic", "latin"],
+  display: "swap",
+});
+
+export async function generateMetadata() {
+  const t = await getT();
+  return { title: t.common.appName, description: t.common.metaDescription };
+}
 
 export const viewport: Viewport = {
   themeColor: "#0A0D13",
@@ -30,22 +39,27 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
+
   return (
-    <html lang="en" className={`${manrope.variable} ${grotesk.variable}`}>
+    <html lang={locale} dir={dirOf(locale)} className={`${manrope.variable} ${grotesk.variable} ${cairo.variable}`}>
       <body>
-        <NavigationProgress />
-        <div className="canvas">
-          <div className="device">
-            <div className="island" aria-hidden />
-            {children}
-            <TabBar />
+        <LanguageProvider initialLocale={locale}>
+          <NavigationProgress />
+          <div className="canvas">
+            <div className="device">
+              <div className="island" aria-hidden />
+              <LanguageFab />
+              {children}
+              <TabBar />
+            </div>
           </div>
-        </div>
+        </LanguageProvider>
       </body>
     </html>
   );

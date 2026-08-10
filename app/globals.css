@@ -27,6 +27,14 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+/* Arabic UI: most copy is set via inline `style={{ fontFamily }}` per element
+   (font.body / font.display from lib/theme.ts), which beats any stylesheet
+   rule short of !important — so the Latin→Arabic font swap has to reach for
+   it too. Scoped to [dir="rtl"], not a blanket override. */
+[dir="rtl"] * {
+  font-family: var(--font-arabic), var(--font-manrope), system-ui, sans-serif !important;
+}
+
 button {
   font-family: inherit;
   cursor: pointer;
@@ -165,6 +173,9 @@ a {
     0 0 22px rgba(70, 229, 255, 0.35);
   transition: width 220ms cubic-bezier(0.22, 1, 0.36, 1);
 }
+[dir="rtl"] .nav-progress__bar {
+  border-radius: 3px 0 0 3px;
+}
 .nav-progress[data-state="idle"] .nav-progress__bar {
   transition: none;
 }
@@ -207,4 +218,9 @@ a {
 }
 .pressable:active {
   transform: scale(0.96);
+}
+
+/* directional glyphs (back chevron, disclosure chevron) — mirror in RTL */
+[dir="rtl"] .rtl-flip {
+  transform: scaleX(-1);
 }

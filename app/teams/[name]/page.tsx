@@ -8,6 +8,7 @@ import Avatar from "@/components/Avatar";
 import FlagDisc from "@/components/FlagDisc";
 import BackButton from "@/components/BackButton";
 import { EmptyState, Pill } from "@/components/ui";
+import { getT } from "@/lib/i18n/server";
 
 type Outcome = "W" | "D" | "L" | null;
 
@@ -24,6 +25,7 @@ const OUTCOME_COLOR: Record<"W" | "D" | "L", string> = { W: c.lime, D: c.muted2,
 export default async function TeamPage({ params }: { params: Promise<{ name: string }> }) {
   const { name } = await params;
   await requireSession();
+  const t = await getT();
 
   let team: TeamDetail;
   try {
@@ -35,15 +37,15 @@ export default async function TeamPage({ params }: { params: Promise<{ name: str
 
   const s = team.stats;
   const tiles = [
-    { v: String(s.played), label: "played", color: c.text },
-    { v: String(s.goals_for), label: "goals for", color: c.lime },
-    { v: String(s.goals_against), label: "goals against", color: c.red },
+    { v: String(s.played), label: t.teamDetail.played, color: c.text },
+    { v: String(s.goals_for), label: t.teamDetail.goalsFor, color: c.lime },
+    { v: String(s.goals_against), label: t.teamDetail.goalsAgainst, color: c.red },
   ];
 
   const record = [
-    { key: "Wins", n: s.wins, color: c.lime },
-    { key: "Draws", n: s.draws, color: c.muted2 },
-    { key: "Losses", n: s.losses, color: c.red },
+    { key: t.teamDetail.wins, n: s.wins, color: c.lime },
+    { key: t.teamDetail.draws, n: s.draws, color: c.muted2 },
+    { key: t.teamDetail.losses, n: s.losses, color: c.red },
   ];
   const recordTotal = s.played || 1;
 
@@ -53,7 +55,7 @@ export default async function TeamPage({ params }: { params: Promise<{ name: str
         {/* top bar */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
           <BackButton fallback="/teams" />
-          <div style={{ color: c.muted, fontSize: 13, fontWeight: 600 }}>Team</div>
+          <div style={{ color: c.muted, fontSize: 13, fontWeight: 600 }}>{t.teamDetail.header}</div>
           <div style={{ width: 38 }} />
         </div>
 
@@ -115,7 +117,7 @@ export default async function TeamPage({ params }: { params: Promise<{ name: str
         {/* record */}
         {s.played > 0 && (
           <>
-            <div style={{ fontFamily: font.display, fontSize: 15, fontWeight: 600, margin: "22px 2px 10px" }}>Record</div>
+            <div style={{ fontFamily: font.display, fontSize: 15, fontWeight: 600, margin: "22px 2px 10px" }}>{t.teamDetail.record}</div>
             <div style={{ background: c.surface, border: `1px solid ${c.border}`, borderRadius: 16, padding: 16 }}>
               <div style={{ display: "flex", height: 10, borderRadius: 999, overflow: "hidden", gap: 2, marginBottom: 14 }}>
                 {record.map((r) => (
@@ -137,10 +139,10 @@ export default async function TeamPage({ params }: { params: Promise<{ name: str
 
         {/* fixtures */}
         <div style={{ fontFamily: font.display, fontSize: 15, fontWeight: 600, margin: "22px 2px 10px" }}>
-          Matches <span style={{ color: c.muted2, fontWeight: 500 }}>({team.matches.length})</span>
+          {t.teamDetail.matches} <span style={{ color: c.muted2, fontWeight: 500 }}>({team.matches.length})</span>
         </div>
         {team.matches.length === 0 ? (
-          <EmptyState>No fixtures for this team.</EmptyState>
+          <EmptyState>{t.teamDetail.noFixtures}</EmptyState>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {team.matches.map((m) => {
@@ -167,7 +169,7 @@ export default async function TeamPage({ params }: { params: Promise<{ name: str
                   <FlagDisc team={opp} size={34} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontWeight: 600, fontSize: 13.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {isHome ? "vs" : "at"} {opp.name}
+                      {isHome ? t.teamDetail.vs : t.teamDetail.at} {opp.name}
                     </div>
                     <div style={{ color: c.muted2, fontSize: 11, marginTop: 2 }}>
                       {m.round_label} · {m.match_time_label}
@@ -198,7 +200,7 @@ export default async function TeamPage({ params }: { params: Promise<{ name: str
                       </div>
                     </>
                   ) : (
-                    <div style={{ color: c.cyan, fontSize: 11, fontWeight: 700, fontFamily: font.display }}>UPCOMING</div>
+                    <div style={{ color: c.cyan, fontSize: 11, fontWeight: 700, fontFamily: font.display }}>{t.teamDetail.upcoming}</div>
                   )}
                 </Link>
               );
@@ -207,10 +209,10 @@ export default async function TeamPage({ params }: { params: Promise<{ name: str
         )}
 
         {/* top predictors */}
-        <div style={{ fontFamily: font.display, fontSize: 15, fontWeight: 600, margin: "22px 2px 4px" }}>Top predictors</div>
-        <div style={{ color: c.muted2, fontSize: 11.5, margin: "0 2px 10px" }}>Players with the most points from {team.name} matches</div>
+        <div style={{ fontFamily: font.display, fontSize: 15, fontWeight: 600, margin: "22px 2px 4px" }}>{t.teamDetail.topPredictors}</div>
+        <div style={{ color: c.muted2, fontSize: 11.5, margin: "0 2px 10px" }}>{t.teamDetail.topPredictorsSub(team.name)}</div>
         {team.top_predictors.length === 0 ? (
-          <EmptyState>Nobody has scored points on this team yet.</EmptyState>
+          <EmptyState>{t.teamDetail.noTopPredictors}</EmptyState>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {team.top_predictors.map((p, i) => (
@@ -240,7 +242,7 @@ export default async function TeamPage({ params }: { params: Promise<{ name: str
                     {p.name}
                   </div>
                   <div style={{ color: c.muted2, fontSize: 11, marginTop: 1 }}>
-                    {p.pred_count} predictions · {Number(p.exact_count)} exact
+                    {t.teamDetail.predictionsCount(p.pred_count)} · {t.teamDetail.exactCount(Number(p.exact_count))}
                   </div>
                 </div>
                 <div className="tabnum" style={{ fontFamily: font.display, fontWeight: 700, fontSize: 16, color: c.lime, flexShrink: 0 }}>

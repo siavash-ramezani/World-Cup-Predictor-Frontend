@@ -7,6 +7,7 @@ import { formatBalance, stringHue } from "@/lib/format";
 import type { DailyPoints, DollarRow, LeaderRow, RankSeries } from "@/lib/types";
 import Avatar from "@/components/Avatar";
 import { EmptyState, Notice } from "@/components/ui";
+import { useI18n } from "@/lib/i18n/LanguageProvider";
 
 type Props = {
   leaders: LeaderRow[];
@@ -21,15 +22,16 @@ type Props = {
 };
 
 export default function RanksClient(props: Props) {
+  const { t } = useI18n();
   const [tab, setTab] = useState(0);
-  const tabs = ["🏆 Points", "$1 Bets", "Rank", "Stats"];
+  const tabs = [t.ranks.tabPoints, t.ranks.tabDollar, t.ranks.tabRank, t.ranks.tabStats];
 
   return (
     <div className="screen">
       <div style={{ padding: "56px 20px 14px", background: c.headerGrad, flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-          <div style={{ fontFamily: font.display, fontSize: 26, fontWeight: 700 }}>Leaderboard</div>
-          <span style={{ color: c.muted2, fontSize: 12, fontWeight: 600 }}>{props.totalPlayers} players</span>
+          <div style={{ fontFamily: font.display, fontSize: 26, fontWeight: 700 }}>{t.ranks.title}</div>
+          <span style={{ color: c.muted2, fontSize: 12, fontWeight: 600 }}>{t.ranks.playersCount(props.totalPlayers)}</span>
         </div>
         <div style={{ display: "flex", background: c.surface2, borderRadius: 12, padding: 4, gap: 3 }}>
           {tabs.map((t, i) => {
@@ -69,7 +71,8 @@ export default function RanksClient(props: Props) {
 
 /* ---------- Points ---------- */
 function PointsTab({ leaders, totalPlayers, meId }: { leaders: LeaderRow[]; totalPlayers: number; meId: number | null }) {
-  if (!leaders.length) return <EmptyState>No players ranked yet.</EmptyState>;
+  const { t } = useI18n();
+  if (!leaders.length) return <EmptyState>{t.ranks.noPlayersRanked}</EmptyState>;
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
       <div
@@ -84,10 +87,10 @@ function PointsTab({ leaders, totalPlayers, meId }: { leaders: LeaderRow[]; tota
           letterSpacing: 0.4,
         }}
       >
-        <div style={{ width: 24, textAlign: "center" }}>#</div>
-        <div style={{ flex: 1 }}>PLAYER</div>
-        <div style={{ width: 42, textAlign: "center" }}>±</div>
-        <div style={{ minWidth: 44, textAlign: "right" }}>PTS</div>
+        <div style={{ width: 24, textAlign: "center" }}>{t.ranks.headerHash}</div>
+        <div style={{ flex: 1 }}>{t.ranks.headerPlayer}</div>
+        <div style={{ width: 42, textAlign: "center" }}>{t.ranks.headerDelta}</div>
+        <div style={{ minWidth: 44, textAlign: "end" }}>{t.ranks.headerPts}</div>
       </div>
 
       {leaders.map((l) => {
@@ -119,21 +122,21 @@ function PointsTab({ leaders, totalPlayers, meId }: { leaders: LeaderRow[]; tota
             <Avatar name={l.name} src={l.avatar_url} size={38} ring={ringColor(l.rank)} fontSize={13} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontWeight: 700, fontSize: 14, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {you ? "You" : l.name}
+                {you ? t.common.you : l.name}
               </div>
-              <div style={{ color: c.muted, fontSize: 11, marginTop: 1 }}>{l.count} predictions</div>
+              <div style={{ color: c.muted, fontSize: 11, marginTop: 1 }}>{t.ranks.predictionsCount(l.count)}</div>
             </div>
             <div style={{ width: 42, textAlign: "center", fontFamily: font.display, fontWeight: 700, fontSize: 12, color: deltaColor }}>
               {deltaText}
             </div>
-            <div className="tabnum" style={{ fontFamily: font.display, fontWeight: 700, fontSize: 17, minWidth: 44, textAlign: "right" }}>
+            <div className="tabnum" style={{ fontFamily: font.display, fontWeight: 700, fontSize: 17, minWidth: 44, textAlign: "end" }}>
               {l.points}
             </div>
           </Link>
         );
       })}
       <div style={{ textAlign: "center", color: c.muted2, fontSize: 12, padding: "8px 0 2px" }}>
-        {leaders.length} of {totalPlayers} players
+        {t.ranks.ofTotalPlayers(leaders.length, totalPlayers)}
       </div>
     </div>
   );
@@ -151,6 +154,7 @@ function DollarTab({
   balance: number;
   meId: number | null;
 }) {
+  const { t } = useI18n();
   const wins = me?.wins ?? 0;
   const losses = me?.losses ?? 0;
   const settled = wins + losses;
@@ -159,7 +163,7 @@ function DollarTab({
   return (
     <>
       <div style={{ borderRadius: 18, padding: 16, background: c.heroGrad, border: `1px solid ${c.limeBorder}`, marginBottom: 14 }}>
-        <div style={{ color: c.muted, fontSize: 11, fontWeight: 700, letterSpacing: 1 }}>YOUR BALANCE</div>
+        <div style={{ color: c.muted, fontSize: 11, fontWeight: 700, letterSpacing: 1 }}>{t.ranks.yourBalance}</div>
         <div
           className="tabnum"
           style={{
@@ -179,19 +183,19 @@ function DollarTab({
               {wins}W · {losses}L
             </span>
             <span style={{ background: "rgba(255,255,255,0.06)", color: c.text2, fontSize: 12, fontWeight: 600, padding: "5px 11px", borderRadius: 999 }}>
-              {me.participated} bets
+              {t.ranks.betsSuffix(me.participated)}
             </span>
             <span style={{ background: c.limeTint, color: c.lime, fontSize: 12, fontWeight: 700, padding: "5px 11px", borderRadius: 999 }}>
-              {winPct}% win
+              {t.ranks.winPct(winPct)}
             </span>
           </div>
         ) : (
-          <div style={{ color: c.muted, fontSize: 12 }}>You haven&apos;t joined a $1 bet yet.</div>
+          <div style={{ color: c.muted, fontSize: 12 }}>{t.ranks.noBetsYet}</div>
         )}
       </div>
 
       {rows.length === 0 ? (
-        <EmptyState>No $1 bets settled yet.</EmptyState>
+        <EmptyState>{t.ranks.noBetsSettled}</EmptyState>
       ) : (
         <>
           <div
@@ -206,9 +210,9 @@ function DollarTab({
               letterSpacing: 0.4,
             }}
           >
-            <div style={{ width: 24, textAlign: "center" }}>#</div>
-            <div style={{ flex: 1 }}>PLAYER</div>
-            <div style={{ minWidth: 62, textAlign: "right" }}>BALANCE</div>
+            <div style={{ width: 24, textAlign: "center" }}>{t.ranks.headerHash}</div>
+            <div style={{ flex: 1 }}>{t.ranks.headerPlayer}</div>
+            <div style={{ minWidth: 62, textAlign: "end" }}>{t.ranks.headerBalance}</div>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {rows.map((d, i) => {
@@ -235,12 +239,12 @@ function DollarTab({
                   <Avatar name={d.name} src={d.avatar_url} size={38} ring={ringColor(rank)} fontSize={13} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontWeight: 700, fontSize: 14, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {you ? "You" : d.name}
+                      {you ? t.common.you : d.name}
                     </div>
                     <div style={{ fontSize: 11, marginTop: 1 }}>
                       <span style={{ color: c.lime, fontWeight: 600 }}>{d.wins}W</span> <span style={{ color: c.muted2 }}>/</span>{" "}
                       <span style={{ color: c.red, fontWeight: 600 }}>{d.losses}L</span>{" "}
-                      <span style={{ color: c.muted2 }}>· {d.participated} bets</span>
+                      <span style={{ color: c.muted2 }}>· {t.ranks.betsSuffix(d.participated)}</span>
                     </div>
                   </div>
                   <div
@@ -250,7 +254,7 @@ function DollarTab({
                       fontWeight: 700,
                       fontSize: 16,
                       minWidth: 62,
-                      textAlign: "right",
+                      textAlign: "end",
                       color: d.balance >= 0 ? c.lime : c.red,
                     }}
                   >
@@ -275,6 +279,7 @@ const H = 168;
 type Pt = { x: number; y: number };
 
 function RankTab({ trend, meName, totalPlayers }: { trend: { dates: string[]; series: RankSeries[] }; meName: string; totalPlayers: number }) {
+  const { t } = useI18n();
   const n = trend.dates.length;
 
   // Stable axis: never rescales as series are toggled.
@@ -334,17 +339,17 @@ function RankTab({ trend, meName, totalPlayers }: { trend: { dates: string[]; se
   return (
     <>
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 6 }}>
-        <div style={{ fontFamily: font.display, fontSize: 15, fontWeight: 600 }}>Rank over time</div>
-        <div style={{ color: c.muted2, fontSize: 11.5 }}>last {n} days</div>
+        <div style={{ fontFamily: font.display, fontSize: 15, fontWeight: 600 }}>{t.ranks.rankOverTime}</div>
+        <div style={{ color: c.muted2, fontSize: 11.5 }}>{t.ranks.lastNDays(n)}</div>
       </div>
 
       {best && now ? (
         <div style={{ color: c.muted, fontSize: 12, marginBottom: 14 }}>
-          You peaked at <span style={{ color: c.cyan, fontWeight: 700, fontFamily: font.display }}>#{best.r}</span> on{" "}
-          {trend.dates[best.i]} · now <span style={{ color: c.text, fontWeight: 700, fontFamily: font.display }}>#{now.r}</span>
+          {t.ranks.peakedAt(best.r, trend.dates[best.i])} ·{" "}
+          {t.ranks.nowAt(now.r)}
         </div>
       ) : (
-        <Notice style={{ marginBottom: 14 }}>No rank history for you yet — pick some matches.</Notice>
+        <Notice style={{ marginBottom: 14 }}>{t.ranks.noRankHistory}</Notice>
       )}
 
       <div style={{ background: c.surface, border: `1px solid ${c.border}`, borderRadius: 16, padding: "14px 10px 8px" }}>
@@ -373,7 +378,7 @@ function RankTab({ trend, meName, totalPlayers }: { trend: { dates: string[]; se
 
           {shown.length === 0 && (
             <text x={176} y={104} fill={c.muted2} fontSize={11} textAnchor="middle">
-              Pick a player below
+              {t.ranks.pickPlayerBelow}
             </text>
           )}
 
@@ -423,21 +428,19 @@ function RankTab({ trend, meName, totalPlayers }: { trend: { dates: string[]; se
 
       {/* controls */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "14px 2px 10px", gap: 8 }}>
-        <div style={{ color: c.muted, fontSize: 12 }}>
-          <span style={{ color: c.text, fontWeight: 700 }}>{shown.length}</span> of {ordered.length} shown
-        </div>
+        <div style={{ color: c.muted, fontSize: 12 }}>{t.ranks.shownOf(shown.length, ordered.length)}</div>
         <div style={{ display: "flex", gap: 8 }}>
           <button
             onClick={() => setVisible(new Set(ordered.map((s) => s.name)))}
             style={{ background: c.surface, border: `1px solid ${c.border3}`, color: c.text2, borderRadius: 999, padding: "6px 12px", fontSize: 11.5, fontWeight: 600 }}
           >
-            Show all
+            {t.ranks.showAll}
           </button>
           <button
             onClick={() => setVisible(new Set([meName]))}
             style={{ background: c.surface, border: `1px solid ${c.border3}`, color: c.text2, borderRadius: 999, padding: "6px 12px", fontSize: 11.5, fontWeight: 600 }}
           >
-            Only me
+            {t.ranks.onlyMe}
           </button>
         </div>
       </div>
@@ -477,7 +480,7 @@ function RankTab({ trend, meName, totalPlayers }: { trend: { dates: string[]; se
                   flexShrink: 0,
                 }}
               />
-              {isMe ? "You" : s.name}
+              {isMe ? t.common.you : s.name}
             </button>
           );
         })}
@@ -488,8 +491,9 @@ function RankTab({ trend, meName, totalPlayers }: { trend: { dates: string[]; se
 
 /* ---------- Tournament stats ---------- */
 function StatsTab({ daily }: { daily: DailyPoints }) {
+  const { t } = useI18n();
   const vals = daily.points;
-  if (!vals.length) return <EmptyState>No tournament stats yet.</EmptyState>;
+  if (!vals.length) return <EmptyState>{t.ranks.noTournamentStats}</EmptyState>;
 
   const total = vals.reduce((a, b) => a + b, 0);
   const best = Math.max(...vals);
@@ -499,9 +503,9 @@ function StatsTab({ daily }: { daily: DailyPoints }) {
   const labelEvery = Math.max(1, Math.ceil(vals.length / 14));
 
   const stats = [
-    { v: total.toLocaleString("en-US"), label: "total points", color: c.text },
-    { v: avg.toLocaleString("en-US"), label: "avg / day", color: c.cyan },
-    { v: best.toLocaleString("en-US"), label: "best day", color: c.lime },
+    { v: total.toLocaleString("en-US"), label: t.ranks.totalPoints, color: c.text },
+    { v: avg.toLocaleString("en-US"), label: t.ranks.avgPerDay, color: c.cyan },
+    { v: best.toLocaleString("en-US"), label: t.ranks.bestDay, color: c.lime },
   ];
 
   return (
@@ -517,7 +521,7 @@ function StatsTab({ daily }: { daily: DailyPoints }) {
         ))}
       </div>
 
-      <div style={{ fontFamily: font.display, fontSize: 15, fontWeight: 600, marginBottom: 10 }}>Daily points distributed</div>
+      <div style={{ fontFamily: font.display, fontSize: 15, fontWeight: 600, marginBottom: 10 }}>{t.ranks.dailyPointsDistributed}</div>
       <div style={{ background: c.surface, border: `1px solid ${c.border}`, borderRadius: 16, padding: "16px 12px 10px" }}>
         <div style={{ display: "flex", alignItems: "flex-end", gap: 3, height: barH }}>
           {vals.map((v, i) => (
@@ -543,7 +547,7 @@ function StatsTab({ daily }: { daily: DailyPoints }) {
         </div>
       </div>
       <div style={{ textAlign: "center", color: c.muted2, fontSize: 11, marginTop: 10 }}>
-        Total points shared across all players each day
+        {t.ranks.dailyPointsFooter}
       </div>
     </>
   );

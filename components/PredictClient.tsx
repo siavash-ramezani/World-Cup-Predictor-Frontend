@@ -11,15 +11,17 @@ import { c, font } from "@/lib/theme";
 import FlagDisc from "@/components/FlagDisc";
 import Countdown from "@/components/Countdown";
 import { EmptyState, Notice, PrimaryButton, ScoreStepper, SegTabs } from "@/components/ui";
+import { useI18n } from "@/lib/i18n/LanguageProvider";
+import type { Dictionary } from "@/lib/i18n/types";
 
 type Groups = { today: Match[]; upcoming: Match[]; locked: Match[] };
 const ZERO: Score = { h: 0, a: 0 };
 
-function betHint(m: Match, active: boolean): string {
-  if (active) return "You're in — losers pay the pot";
-  if (!m.is_prediction_open) return "Betting closed";
-  if (!m.my_prediction) return "Save your pick first";
-  return "Stake $1 on your call";
+function betHint(m: Match, active: boolean, t: Dictionary["predict"]): string {
+  if (active) return t.betHintActive;
+  if (!m.is_prediction_open) return t.betHintClosed;
+  if (!m.my_prediction) return t.betHintNeedPick;
+  return t.betHintDefault;
 }
 
 export default function PredictClient({
@@ -34,6 +36,7 @@ export default function PredictClient({
   isGuest: boolean;
 }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [tab, setTab] = useState(initialTab);
   const [pending, startTransition] = useTransition();
   const [msg, setMsg] = useState<{ tone: "error" | "lime"; text: string } | null>(null);
@@ -76,7 +79,7 @@ export default function PredictClient({
       );
       if (res.ok) {
         setBaseline({ ...scores });
-        setMsg({ tone: "lime", text: `Saved ${queued.length} pick${queued.length === 1 ? "" : "s"}.` });
+        setMsg({ tone: "lime", text: t.predict.savedNPicks(queued.length) });
         router.refresh();
       } else {
         setMsg({ tone: "error", text: res.error });
@@ -93,7 +96,7 @@ export default function PredictClient({
       const res = await toggleDollarBetAction(m.id);
       setBetPending(null);
       if (res.ok) {
-        setMsg({ tone: "lime", text: wasIn ? "Left the $1 bet." : "Joined the $1 bet." });
+        setMsg({ tone: "lime", text: wasIn ? t.predict.leftBet : t.predict.joinedBet });
         router.refresh();
       } else {
         setMsg({ tone: "error", text: res.error });
@@ -104,11 +107,7 @@ export default function PredictClient({
   const lists: Match[][] = [groups.today, groups.upcoming, groups.locked];
   const visible = lists[tab] ?? [];
 
-  const emptyCopy = [
-    "No fixtures kick off today.",
-    "Nothing else open for picks right now.",
-    "No locked fixtures — everything upcoming is still open.",
-  ][tab];
+  const emptyCopy = [t.predict.emptyToday, t.predict.emptyUpcoming, t.predict.emptyLocked][tab];
 
   return (
     <div className="screen">
@@ -116,19 +115,19 @@ export default function PredictClient({
       <div style={{ padding: "56px 20px 14px", background: c.headerGrad, flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 14 }}>
           <div>
-            <div style={{ fontFamily: font.display, fontSize: 26, fontWeight: 700, lineHeight: 1 }}>Predict</div>
+            <div style={{ fontFamily: font.display, fontSize: 26, fontWeight: 700, lineHeight: 1 }}>{t.predict.title}</div>
             <div style={{ display: "flex", alignItems: "center", gap: 7, marginTop: 8 }}>
               <span style={{ width: 7, height: 7, borderRadius: "50%", background: c.red, boxShadow: `0 0 8px ${c.red}` }} />
               <span style={{ color: c.muted, fontSize: 12.5, fontWeight: 500 }}>
                 {Number.isFinite(soonest) ? (
                   <>
-                    Picks lock in{" "}
+                    {t.predict.picksLockIn}{" "}
                     <span style={{ color: c.text, fontWeight: 700 }}>
-                      <Countdown deadlineMs={soonest} lockedText="now" />
+                      <Countdown deadlineMs={soonest} lockedText={t.countdown.now} />
                     </span>
                   </>
                 ) : (
-                  "No picks open"
+                  t.predict.noPicksOpen
                 )}
               </span>
             </div>
@@ -147,21 +146,21 @@ export default function PredictClient({
             <span className="tabnum" style={{ fontFamily: font.display, fontWeight: 700, fontSize: 18, color: c.lime }}>
               {totalPoints}
             </span>
-            <span style={{ color: c.muted, fontSize: 10, fontWeight: 600, letterSpacing: 0.5 }}>PTS</span>
+            <span style={{ color: c.muted, fontSize: 10, fontWeight: 600, letterSpacing: 0.5 }}>{t.common.pts}</span>
           </div>
         </div>
-        <SegTabs tabs={["Today", "Upcoming", "Locked"]} active={tab} onChange={setTab} fontSize={13} />
+        <SegTabs tabs={[t.predict.tabToday, t.predict.tabUpcoming, t.predict.tabLocked]} active={tab} onChange={setTab} fontSize={13} />
       </div>
 
       {/* match list */}
       <div className="scroll" style={{ padding: "14px 16px 8px", display: "flex", flexDirection: "column", gap: 12 }}>
         {isGuest && (
           <Notice>
-            You&apos;re browsing as a guest.{" "}
+            {t.predict.guestBrowsing}{" "}
             <Link href="/login" style={{ color: c.lime, fontWeight: 700 }}>
-              Sign in
+              {t.common.signIn}
             </Link>{" "}
-            to submit predictions.
+            {t.predict.signInToSubmit}
           </Notice>
         )}
         {msg && <Notice tone={msg.tone}>{msg.text}</Notice>}
@@ -189,7 +188,7 @@ export default function PredictClient({
                     {saved && (
                       <span style={{ color: c.lime, fontSize: 10.5, fontWeight: 700, display: "flex", alignItems: "center", gap: 4 }}>
                         <span style={{ width: 5, height: 5, borderRadius: "50%", background: c.lime }} />
-                        SAVED
+                        {t.predict.saved}
                       </span>
                     )}
                     <span
@@ -203,7 +202,7 @@ export default function PredictClient({
                         borderRadius: 999,
                       }}
                     >
-                      Exact +{m.scoring.exact_points}
+                      {t.predict.exactPlus(m.scoring.exact_points)}
                     </span>
                   </span>
                 </div>
@@ -237,14 +236,14 @@ export default function PredictClient({
                 <div style={{ marginTop: 10, textAlign: "center", color: c.muted, fontSize: 12 }}>
                   {m.is_prediction_open ? (
                     <>
-                      Your call: <span style={{ color: c.text, fontWeight: 600 }}>{verdictLabel(m.home.name, m.away.name, s.h, s.a)}</span>
+                      {t.predict.yourCall} <span style={{ color: c.text, fontWeight: 600 }}>{verdictLabel(m.home.name, m.away.name, s.h, s.a, t.verdict)}</span>
                     </>
                   ) : m.my_prediction ? (
                     <>
-                      Locked in: <span style={{ color: c.text, fontWeight: 600 }}>{m.my_prediction.label}</span>
+                      {t.predict.lockedIn} <span style={{ color: c.text, fontWeight: 600 }}>{m.my_prediction.label}</span>
                     </>
                   ) : (
-                    <span style={{ color: c.muted2 }}>Locked — no pick submitted</span>
+                    <span style={{ color: c.muted2 }}>{t.predict.lockedNoPick}</span>
                   )}
                 </div>
 
@@ -262,9 +261,9 @@ export default function PredictClient({
                   >
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 12.5, fontWeight: 600 }}>
-                        💵 $1 bet <span style={{ color: c.muted2, fontWeight: 500 }}>· {m.dollar_bet_count} in</span>
+                        💵 {t.predict.dollarBet} <span style={{ color: c.muted2, fontWeight: 500 }}>· {t.predict.betCountIn(m.dollar_bet_count)}</span>
                       </div>
-                      <div style={{ color: c.muted, fontSize: 11, marginTop: 2 }}>{betHint(m, betActive)}</div>
+                      <div style={{ color: c.muted, fontSize: 11, marginTop: 2 }}>{betHint(m, betActive, t.predict)}</div>
                     </div>
                     <button
                       onClick={() => toggleBet(m)}
@@ -284,14 +283,14 @@ export default function PredictClient({
                         minWidth: 68,
                       }}
                     >
-                      {betPending === m.id ? "…" : betActive ? "Joined" : "Join"}
+                      {betPending === m.id ? "…" : betActive ? t.predict.joined : t.predict.join}
                     </button>
                   </div>
                 )}
 
                 <div style={{ marginTop: 10, textAlign: "center" }}>
                   <Link href={`/match/${m.id}`} style={{ color: c.muted2, fontSize: 11.5, fontWeight: 600 }}>
-                    Match details →
+                    {t.predict.matchDetails} {t.common.arrow}
                   </Link>
                 </div>
               </div>
@@ -303,11 +302,7 @@ export default function PredictClient({
       {/* submit */}
       <div style={{ padding: "8px 16px 10px", background: `linear-gradient(rgba(10,13,19,0),${c.bg} 40%)`, flexShrink: 0 }}>
         <PrimaryButton onClick={submit} disabled={isGuest || pending || queued.length === 0}>
-          {pending
-            ? "Submitting…"
-            : queued.length === 0
-              ? "All picks saved"
-              : `Submit ${queued.length} pick${queued.length === 1 ? "" : "s"}`}
+          {pending ? t.predict.submitting : queued.length === 0 ? t.predict.allSaved : t.predict.submitN(queued.length)}
         </PrimaryButton>
       </div>
     </div>

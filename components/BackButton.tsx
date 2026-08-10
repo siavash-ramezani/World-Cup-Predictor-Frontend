@@ -4,12 +4,14 @@ import { useRouter } from "next/navigation";
 import { c } from "@/lib/theme";
 import { ChevronLeft } from "@/components/icons";
 import { startNavigationProgress } from "@/components/NavigationProgress";
+import { useI18n } from "@/lib/i18n/LanguageProvider";
 
 export default function BackButton({ fallback = "/" }: { fallback?: string }) {
   const router = useRouter();
+  const { t } = useI18n();
   return (
     <button
-      aria-label="Back"
+      aria-label={t.a11y.back}
       className="pressable"
       onClick={() => {
         // `router.back()` fires popstate, which the progress bar already listens for.
@@ -31,7 +33,9 @@ export default function BackButton({ fallback = "/" }: { fallback?: string }) {
         color: c.text2,
       }}
     >
-      <ChevronLeft size={16} />
+      <span className="rtl-flip" style={{ display: "flex" }}>
+        <ChevronLeft size={16} />
+      </span>
     </button>
   );
 }
