@@ -15,7 +15,7 @@ type Row = { label: string; pct: number; count: number; color: string };
 const teamColumn = { display: "flex", flexDirection: "column", alignItems: "center", gap: 8, width: 100 } as const;
 const teamName = { fontFamily: font.display, fontWeight: 600, fontSize: 14, textAlign: "center", lineHeight: 1.2 } as const;
 
-function BetList({ rows, dim }: { rows: Row[]; dim?: boolean }) {
+function BetList({ rows }: { rows: Row[] }) {
   return (
     <>
       {rows.map((row) => (
@@ -43,7 +43,7 @@ function BetList({ rows, dim }: { rows: Row[]; dim?: boolean }) {
               fontFamily: font.display,
               fontSize: 11.5,
               fontWeight: 700,
-              color: dim ? c.muted2 : c.text2,
+              color: c.text2,
             }}
           >
             {row.pct}% · {row.count}
@@ -64,22 +64,12 @@ export default async function MatchResultsPage({ params }: { params: Promise<{ i
 
   const community = match.community;
   const wp = community?.win_probability;
-  const dollar = community?.dollar;
-  const dollarPct = (n: number) => (dollar && dollar.total ? Math.round((n / dollar.total) * 100) : 0);
 
   const pointsRows: Row[] = wp
     ? [
         { label: t.verdict.teamWin(match.home.name), pct: wp.home.percent, count: wp.home.count, color: c.lime },
         { label: t.verdict.draw, pct: wp.draw.percent, count: wp.draw.count, color: c.dim },
         { label: t.verdict.teamWin(match.away.name), pct: wp.away.percent, count: wp.away.count, color: c.cyan },
-      ]
-    : [];
-
-  const dollarRows: Row[] = dollar
-    ? [
-        { label: t.verdict.teamWin(match.home.name), pct: dollarPct(dollar.home), count: dollar.home, color: c.lime },
-        { label: t.verdict.draw, pct: dollarPct(dollar.draw), count: dollar.draw, color: c.dim },
-        { label: t.verdict.teamWin(match.away.name), pct: dollarPct(dollar.away), count: dollar.away, color: c.cyan },
       ]
     : [];
 
@@ -160,17 +150,6 @@ export default async function MatchResultsPage({ params }: { params: Promise<{ i
                 </span>
               </div>
               <BetList rows={pointsRows} />
-            </div>
-
-            {/* dollar bets */}
-            <div style={{ marginTop: 12, borderRadius: 18, padding: 16, background: c.surface, border: `1px solid ${c.border}` }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-                <div style={{ fontFamily: font.display, fontSize: 14, fontWeight: 600 }}>💵 {t.matchResults.dollarBets}</div>
-                <span style={{ color: c.muted2, fontFamily: font.display, fontWeight: 700, fontSize: 14 }}>
-                  {t.matchResults.betsCount(dollar?.total ?? 0)}
-                </span>
-              </div>
-              <BetList rows={dollarRows} dim />
             </div>
 
             {/* all predictions */}

@@ -103,34 +103,20 @@ export type Dictionary = {
     yourCall: string;
     lockedIn: string;
     lockedNoPick: string;
-    dollarBet: string;
-    betCountIn: (n: number) => string;
-    betHintActive: string;
-    betHintClosed: string;
-    betHintNeedPick: string;
-    betHintDefault: string;
-    joined: string;
-    join: string;
     matchDetails: string;
     submitting: string;
     allSaved: string;
     submitN: (n: number) => string;
     savedNPicks: (n: number) => string;
-    leftBet: string;
-    joinedBet: string;
   };
 
   matchDetail: {
-    stakedTooltip: (n: number) => string;
     locksInLower: string;
     now: string;
     guestCantPredict: string;
     toPlay: string;
     predictionsLocked: string;
     yourPrediction: string;
-    dollarBet: string;
-    betActiveHint: string;
-    betInactiveHint: string;
     winProbability: string;
     community: string;
     hiddenPicks: string;
@@ -152,8 +138,6 @@ export type Dictionary = {
     communityUnavailable: string;
     pointsPredictions: string;
     inCount: (n: number) => string;
-    dollarBets: string;
-    betsCount: (n: number) => string;
     allPredictions: string;
   };
 
@@ -203,7 +187,6 @@ export type Dictionary = {
     title: string;
     playersCount: (n: number) => string;
     tabPoints: string;
-    tabDollar: string;
     tabRank: string;
     tabStats: string;
     noPlayersRanked: string;
@@ -213,12 +196,6 @@ export type Dictionary = {
     headerPts: string;
     predictionsCount: (n: number) => string;
     ofTotalPlayers: (shown: number, total: number) => string;
-    yourBalance: string;
-    noBetsYet: string;
-    noBetsSettled: string;
-    headerBalance: string;
-    betsSuffix: (n: number) => string;
-    winPct: (pct: number) => string;
     rankOverTime: string;
     lastNDays: (n: number) => string;
     peakedAt: (rank: number, date: string) => string;
@@ -245,11 +222,6 @@ export type Dictionary = {
     guestNotice: string;
     totalPointsLabel: string;
     predictionsLabel: string;
-    balanceLabel: string;
-    betRecord: string;
-    betsSuffix: (n: number) => string;
-    winPct: (pct: number) => string;
-    noBetsYetJoin: string;
     shortcuts: string;
     linkPublicProfile: string;
     linkPastMatches: string;

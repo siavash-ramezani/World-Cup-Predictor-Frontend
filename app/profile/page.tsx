@@ -1,9 +1,8 @@
 import Link from "next/link";
 import { apiGet, requireSession } from "@/lib/api";
 import { logoutAction } from "@/lib/actions";
-import type { ApiUser, DollarRes, LeaderboardRes, Wrapped } from "@/lib/types";
+import type { ApiUser, LeaderboardRes, Wrapped } from "@/lib/types";
 import { c, font } from "@/lib/theme";
-import { formatBalance } from "@/lib/format";
 import Avatar from "@/components/Avatar";
 import { Notice, Pill } from "@/components/ui";
 import { ChevronRight } from "@/components/icons";
@@ -14,24 +13,18 @@ export default async function ProfilePage() {
   await requireSession();
   const t = await getT();
 
-  const [meRes, lb, dl] = await Promise.all([
+  const [meRes, lb] = await Promise.all([
     apiGet<Wrapped<ApiUser>>("/me"),
     apiGet<LeaderboardRes>("/leaderboard"),
-    apiGet<DollarRes>("/leaderboard/dollar"),
   ]);
 
   const me = meRes.data;
   const rank = lb.meta.me?.rank ?? null;
   const preds = lb.meta.me?.count ?? 0;
-  const balance = dl.meta.your_balance ?? 0;
-  const bets = dl.meta.me;
-  const settled = (bets?.wins ?? 0) + (bets?.losses ?? 0);
-  const winPct = settled ? Math.round(((bets?.wins ?? 0) / settled) * 100) : 0;
 
   const tiles = [
     { v: String(me.total_points ?? 0), label: t.profile.totalPointsLabel, color: c.lime },
     { v: String(preds), label: t.profile.predictionsLabel, color: c.text },
-    { v: formatBalance(balance), label: t.profile.balanceLabel, color: balance >= 0 ? c.cyan : c.red },
   ];
 
   const links = [
@@ -101,31 +94,15 @@ export default async function ProfilePage() {
 
         {/* stat tiles */}
         <div style={{ display: "flex", gap: 10, marginTop: 14 }}>
-          {tiles.map((t) => (
-            <div key={t.label} style={{ flex: 1, background: c.surface, border: `1px solid ${c.border}`, borderRadius: 14, padding: 13, minWidth: 0 }}>
-              <div className="tabnum" style={{ fontFamily: font.display, fontWeight: 700, fontSize: 19, color: t.color }}>
-                {t.v}
+          {tiles.map((tile) => (
+            <div key={tile.label} style={{ flex: 1, background: c.surface, border: `1px solid ${c.border}`, borderRadius: 14, padding: 13, minWidth: 0 }}>
+              <div className="tabnum" style={{ fontFamily: font.display, fontWeight: 700, fontSize: 19, color: tile.color }}>
+                {tile.v}
               </div>
-              <div style={{ color: c.muted, fontSize: 11, marginTop: 3 }}>{t.label}</div>
+              <div style={{ color: c.muted, fontSize: 11, marginTop: 3 }}>{tile.label}</div>
             </div>
           ))}
         </div>
-
-        {/* $1 bet record */}
-        <div style={{ fontFamily: font.display, fontSize: 15, fontWeight: 600, margin: "22px 2px 10px" }}>{t.profile.betRecord}</div>
-        {bets ? (
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            <Pill bg={c.limeTint} color={c.lime} style={{ fontFamily: font.display, fontWeight: 700, padding: "7px 13px" }}>
-              {bets.wins}W · {bets.losses}L
-            </Pill>
-            <Pill style={{ padding: "7px 13px" }}>{t.profile.betsSuffix(bets.participated)}</Pill>
-            <Pill bg={c.cyanTint} color={c.cyan} style={{ fontFamily: font.display, fontWeight: 700, padding: "7px 13px" }}>
-              {t.profile.winPct(winPct)}
-            </Pill>
-          </div>
-        ) : (
-          <Notice>{t.profile.noBetsYetJoin}</Notice>
-        )}
 
         {/* links */}
         <div style={{ fontFamily: font.display, fontSize: 15, fontWeight: 600, margin: "22px 2px 10px" }}>{t.profile.shortcuts}</div>

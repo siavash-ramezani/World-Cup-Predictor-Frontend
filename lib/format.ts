@@ -125,10 +125,6 @@ export function verdictLabel(homeName: string, awayName: string, home: number, a
   return o === "home" ? t.teamWin(homeName) : o === "away" ? t.teamWin(awayName) : t.draw;
 }
 
-export function formatBalance(n: number): string {
-  return (n >= 0 ? "+$" : "−$") + Math.abs(n).toFixed(2);
-}
-
 export function formatPoints(n: number): string {
   return n > 0 ? `+${n}` : String(n);
 }

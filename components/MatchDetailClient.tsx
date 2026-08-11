@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { MatchDetail } from "@/lib/types";
-import { savePredictionAction, toggleDollarBetAction } from "@/lib/actions";
+import { savePredictionAction } from "@/lib/actions";
 import { useScores } from "@/lib/useScores";
 import { classifyPick, parseApiTime, teamCode, verdictLabel } from "@/lib/format";
 import { c, font } from "@/lib/theme";
@@ -57,15 +57,6 @@ export default function MatchDetailClient({ match, isGuest }: { match: MatchDeta
     });
   };
 
-  const toggleBet = () => {
-    setMsg(null);
-    startTransition(async () => {
-      const res = await toggleDollarBetAction(match.id);
-      if (res.ok) router.refresh();
-      else setMsg({ tone: "error", text: res.error });
-    });
-  };
-
   const wp = community?.win_probability;
   const segments = wp
     ? [
@@ -75,8 +66,6 @@ export default function MatchDetailClient({ match, isGuest }: { match: MatchDeta
       ]
     : [];
 
-  const betActive = match.dollar_bet?.active ?? false;
-
   return (
     <div className="screen">
       <div className="scroll" style={{ padding: "54px 16px 16px" }}>
@@ -84,22 +73,7 @@ export default function MatchDetailClient({ match, isGuest }: { match: MatchDeta
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18, gap: 8 }}>
           <BackButton />
           <div style={{ color: c.muted, fontSize: 13, fontWeight: 600 }}>{match.round_label}</div>
-          <span
-            style={{
-              background: c.surface,
-              border: `1px solid ${c.border3}`,
-              borderRadius: 999,
-              padding: "8px 11px",
-              fontSize: 11.5,
-              fontWeight: 700,
-              color: c.text2,
-              fontFamily: font.display,
-              whiteSpace: "nowrap",
-            }}
-            title={t.matchDetail.stakedTooltip(match.dollar_bet_count)}
-          >
-            💵 {match.dollar_bet_count}
-          </span>
+          <div style={{ width: 38 }} />
         </div>
 
         {/* matchup — each crest links to that team's page */}
@@ -156,47 +130,6 @@ export default function MatchDetailClient({ match, isGuest }: { match: MatchDeta
             {verdictLabel(match.home.name, match.away.name, s.h, s.a, t.verdict)}
           </div>
         </div>
-
-        {/* $1 bet */}
-        {!isGuest && (
-          <div
-            style={{
-              marginTop: 12,
-              display: "flex",
-              alignItems: "center",
-              gap: 12,
-              background: c.surface,
-              border: `1px solid ${betActive ? "rgba(181,255,61,0.35)" : c.border}`,
-              borderRadius: 14,
-              padding: "12px 14px",
-            }}
-          >
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13.5, fontWeight: 600 }}>💵 {t.matchDetail.dollarBet}</div>
-              <div style={{ color: c.muted, fontSize: 11.5, marginTop: 2 }}>
-                {betActive ? t.matchDetail.betActiveHint : t.matchDetail.betInactiveHint}
-              </div>
-            </div>
-            <button
-              onClick={toggleBet}
-              disabled={pending || !match.is_prediction_open}
-              className="pressable"
-              style={{
-                background: betActive ? c.lime : "rgba(255,255,255,0.06)",
-                color: betActive ? c.limeInk : c.text2,
-                borderRadius: 10,
-                padding: "9px 14px",
-                fontFamily: font.display,
-                fontWeight: 700,
-                fontSize: 12.5,
-                opacity: pending || !match.is_prediction_open ? 0.45 : 1,
-                flexShrink: 0,
-              }}
-            >
-              {betActive ? t.predict.joined : t.predict.join}
-            </button>
-          </div>
-        )}
 
         {/* win probability */}
         <div style={{ marginTop: 16 }}>

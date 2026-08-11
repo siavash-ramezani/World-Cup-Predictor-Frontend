@@ -3,8 +3,8 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { c, font, medal, rankColor, ringColor, youBg, youBorder } from "@/lib/theme";
-import { formatBalance, stringHue } from "@/lib/format";
-import type { DailyPoints, DollarRow, LeaderRow, RankSeries } from "@/lib/types";
+import { stringHue } from "@/lib/format";
+import type { DailyPoints, LeaderRow, RankSeries } from "@/lib/types";
 import Avatar from "@/components/Avatar";
 import { EmptyState, Notice } from "@/components/ui";
 import { useI18n } from "@/lib/i18n/LanguageProvider";
@@ -12,9 +12,6 @@ import { useI18n } from "@/lib/i18n/LanguageProvider";
 type Props = {
   leaders: LeaderRow[];
   totalPlayers: number;
-  dollarRows: DollarRow[];
-  dollarMe: DollarRow | null;
-  yourBalance: number;
   trend: { dates: string[]; series: RankSeries[] };
   meName: string;
   daily: DailyPoints;
@@ -24,7 +21,7 @@ type Props = {
 export default function RanksClient(props: Props) {
   const { t } = useI18n();
   const [tab, setTab] = useState(0);
-  const tabs = [t.ranks.tabPoints, t.ranks.tabDollar, t.ranks.tabRank, t.ranks.tabStats];
+  const tabs = [t.ranks.tabPoints, t.ranks.tabRank, t.ranks.tabStats];
 
   return (
     <div className="screen">
@@ -61,9 +58,8 @@ export default function RanksClient(props: Props) {
 
       <div className="scroll" style={{ padding: "16px 16px 12px" }}>
         {tab === 0 && <PointsTab leaders={props.leaders} totalPlayers={props.totalPlayers} meId={props.meId} />}
-        {tab === 1 && <DollarTab rows={props.dollarRows} me={props.dollarMe} balance={props.yourBalance} meId={props.meId} />}
-        {tab === 2 && <RankTab trend={props.trend} meName={props.meName} totalPlayers={props.totalPlayers} />}
-        {tab === 3 && <StatsTab daily={props.daily} />}
+        {tab === 1 && <RankTab trend={props.trend} meName={props.meName} totalPlayers={props.totalPlayers} />}
+        {tab === 2 && <StatsTab daily={props.daily} />}
       </div>
     </div>
   );
@@ -139,134 +135,6 @@ function PointsTab({ leaders, totalPlayers, meId }: { leaders: LeaderRow[]; tota
         {t.ranks.ofTotalPlayers(leaders.length, totalPlayers)}
       </div>
     </div>
-  );
-}
-
-/* ---------- $1 bets ---------- */
-function DollarTab({
-  rows,
-  me,
-  balance,
-  meId,
-}: {
-  rows: DollarRow[];
-  me: DollarRow | null;
-  balance: number;
-  meId: number | null;
-}) {
-  const { t } = useI18n();
-  const wins = me?.wins ?? 0;
-  const losses = me?.losses ?? 0;
-  const settled = wins + losses;
-  const winPct = settled ? Math.round((wins / settled) * 100) : 0;
-
-  return (
-    <>
-      <div style={{ borderRadius: 18, padding: 16, background: c.heroGrad, border: `1px solid ${c.limeBorder}`, marginBottom: 14 }}>
-        <div style={{ color: c.muted, fontSize: 11, fontWeight: 700, letterSpacing: 1 }}>{t.ranks.yourBalance}</div>
-        <div
-          className="tabnum"
-          style={{
-            fontFamily: font.display,
-            fontSize: 40,
-            fontWeight: 700,
-            color: balance >= 0 ? c.lime : c.red,
-            lineHeight: 1,
-            margin: "6px 0 12px",
-          }}
-        >
-          {formatBalance(balance)}
-        </div>
-        {me ? (
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <span style={{ background: "rgba(255,255,255,0.06)", color: c.text2, fontSize: 12, fontWeight: 600, padding: "5px 11px", borderRadius: 999 }}>
-              {wins}W · {losses}L
-            </span>
-            <span style={{ background: "rgba(255,255,255,0.06)", color: c.text2, fontSize: 12, fontWeight: 600, padding: "5px 11px", borderRadius: 999 }}>
-              {t.ranks.betsSuffix(me.participated)}
-            </span>
-            <span style={{ background: c.limeTint, color: c.lime, fontSize: 12, fontWeight: 700, padding: "5px 11px", borderRadius: 999 }}>
-              {t.ranks.winPct(winPct)}
-            </span>
-          </div>
-        ) : (
-          <div style={{ color: c.muted, fontSize: 12 }}>{t.ranks.noBetsYet}</div>
-        )}
-      </div>
-
-      {rows.length === 0 ? (
-        <EmptyState>{t.ranks.noBetsSettled}</EmptyState>
-      ) : (
-        <>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 11,
-              padding: "0 12px 4px",
-              color: c.muted2,
-              fontSize: 10.5,
-              fontWeight: 600,
-              letterSpacing: 0.4,
-            }}
-          >
-            <div style={{ width: 24, textAlign: "center" }}>{t.ranks.headerHash}</div>
-            <div style={{ flex: 1 }}>{t.ranks.headerPlayer}</div>
-            <div style={{ minWidth: 62, textAlign: "end" }}>{t.ranks.headerBalance}</div>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {rows.map((d, i) => {
-              const rank = i + 1;
-              const you = d.id === meId;
-              return (
-                <Link
-                  key={d.id}
-                  href={`/users/${d.id}`}
-                  className="pressable"
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 11,
-                    borderRadius: 14,
-                    padding: "10px 12px",
-                    background: youBg(you),
-                    border: youBorder(you),
-                  }}
-                >
-                  <div style={{ width: 24, textAlign: "center", fontFamily: font.display, fontWeight: 700, fontSize: 15, color: rankColor(rank) }}>
-                    {medal(rank)}
-                  </div>
-                  <Avatar name={d.name} src={d.avatar_url} size={38} ring={ringColor(rank)} fontSize={13} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 700, fontSize: 14, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {you ? t.common.you : d.name}
-                    </div>
-                    <div style={{ fontSize: 11, marginTop: 1 }}>
-                      <span style={{ color: c.lime, fontWeight: 600 }}>{d.wins}W</span> <span style={{ color: c.muted2 }}>/</span>{" "}
-                      <span style={{ color: c.red, fontWeight: 600 }}>{d.losses}L</span>{" "}
-                      <span style={{ color: c.muted2 }}>· {t.ranks.betsSuffix(d.participated)}</span>
-                    </div>
-                  </div>
-                  <div
-                    className="tabnum"
-                    style={{
-                      fontFamily: font.display,
-                      fontWeight: 700,
-                      fontSize: 16,
-                      minWidth: 62,
-                      textAlign: "end",
-                      color: d.balance >= 0 ? c.lime : c.red,
-                    }}
-                  >
-                    {formatBalance(d.balance)}
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        </>
-      )}
-    </>
   );
 }
 

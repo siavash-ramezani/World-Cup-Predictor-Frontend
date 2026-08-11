@@ -30,13 +30,6 @@ export type Prediction = {
 
 export type MyCall = { outcome: Outcome; label: string };
 
-export type DollarBet = {
-  active: boolean;
-  predicted_outcome: Outcome | null;
-  won: boolean | null;
-  payout: number | null;
-};
-
 export type Match = {
   id: number;
   round: string;
@@ -57,22 +50,18 @@ export type Match = {
   scoring: Scoring;
   my_prediction: Prediction | null;
   my_call: MyCall | null;
-  dollar_bet: DollarBet | null;
-  dollar_bet_count: number;
 };
 
 export type CommunityPick = {
   user: Pick<ApiUser, "id" | "name" | "avatar_url" | "is_admin" | "is_guest" | "bale_linked">;
   prediction: Prediction;
   points_earned: number;
-  dollar_bet: DollarBet | null;
 };
 
 export type Community = {
   total_predictions: number;
   multiplier: number;
   win_probability: Record<Outcome, { count: number; percent: number }>;
-  dollar: { total: number; home: number; draw: number; away: number };
   picks: CommunityPick[];
 };
 
@@ -112,16 +101,6 @@ export type LeaderRow = {
   rank_delta: number | null;
 };
 
-export type DollarRow = {
-  id: number;
-  name: string;
-  avatar_url: string;
-  participated: number;
-  balance: number;
-  wins: number;
-  losses: number;
-};
-
 export type RankSeries = { name: string; ranks: (number | null)[] };
 
 export type DailyPoints = { dates: string[]; points: number[]; match_counts: number[] };
@@ -155,8 +134,8 @@ export type TeamStats = {
   goal_diff: number;
 };
 
-/** Team fixtures omit the caller's own prediction/bet fields. */
-export type TeamMatch = Omit<Match, "my_prediction" | "my_call" | "dollar_bet" | "dollar_bet_count">;
+/** Team fixtures omit the caller's own prediction fields. */
+export type TeamMatch = Omit<Match, "my_prediction" | "my_call">;
 
 /** NOTE: `total_points` and `exact_count` arrive as strings (SQL aggregates). */
 export type TopPredictor = {
@@ -195,6 +174,5 @@ export type WrappedMeta<T, M> = { data: T; meta: M };
 
 export type LoginRes = Wrapped<{ token: string; token_type: string; user: ApiUser }>;
 export type LeaderboardRes = WrappedMeta<LeaderRow[], { total_players: number; me: LeaderRow | null }>;
-export type DollarRes = WrappedMeta<DollarRow[], { me: DollarRow | null; your_balance: number }>;
 export type RankTrendRes = WrappedMeta<{ dates: string[]; series: RankSeries[] }, { me_name: string }>;
 export type StatsRes = Wrapped<{ daily_points: DailyPoints; team_bubbles: { teams: TeamBubble[] } }>;

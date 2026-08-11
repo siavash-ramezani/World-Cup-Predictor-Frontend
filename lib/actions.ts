@@ -135,21 +135,3 @@ export async function updateNameAction(name: string): Promise<MutationResult> {
   revalidatePath("/profile");
   return { ok: true };
 }
-
-/** POST /matches/{id}/dollar-bet — toggles participation; needs an existing prediction. */
-export async function toggleDollarBetAction(matchId: number): Promise<MutationResult> {
-  const blocked = await requireRealUser();
-  if (blocked) return blocked;
-
-  try {
-    await apiFetch(`/matches/${matchId}/dollar-bet`, { method: "POST" });
-  } catch (err) {
-    if (err instanceof ApiError) return { ok: false, error: err.firstFieldError ?? err.message };
-    throw err;
-  }
-
-  revalidatePath(`/match/${matchId}`);
-  revalidatePath("/predict");
-  revalidatePath("/ranks");
-  return { ok: true };
-}
