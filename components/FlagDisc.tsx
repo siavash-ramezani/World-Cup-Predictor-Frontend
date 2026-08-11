@@ -3,10 +3,12 @@ import { flagIconCode, teamGradient } from "@/lib/format";
 /**
  * Circular team crest.
  *
- * The API sends flags as emoji ("🇫🇷"), but Windows ships no flag glyphs — Chrome
- * renders the regional-indicator pair as two letter boxes. So we decode the emoji
- * to a country code and paint the real flag from the self-hosted `flag-icons` SVG
- * set, which looks identical on every platform. Undecodable flags fall back to the
+ * The API sends flags two ways: a real country as emoji ("🇫🇷"), or a fictional/
+ * demo team as a generated placeholder image URL. Windows ships no flag glyphs —
+ * Chrome renders the regional-indicator pair as two letter boxes — so real-country
+ * emoji get decoded to a country code and painted from the self-hosted `flag-icons`
+ * SVG set, which looks identical on every platform. Image-URL flags are rendered
+ * directly. Anything else (undecodable emoji, no flag) falls back to the
  * deterministic per-team gradient the original design used.
  */
 export default function FlagDisc({
@@ -18,7 +20,6 @@ export default function FlagDisc({
   size?: number;
   ring?: number;
 }) {
-  const code = flagIconCode(team);
   const shared = {
     width: size,
     height: size,
@@ -27,6 +28,19 @@ export default function FlagDisc({
     flexShrink: 0,
     display: "block",
   } as const;
+
+  if (team.flag && /^https?:\/\//.test(team.flag)) {
+    return (
+      <img
+        src={team.flag}
+        alt={team.name}
+        title={team.name}
+        style={{ ...shared, objectFit: "cover" }}
+      />
+    );
+  }
+
+  const code = flagIconCode(team);
 
   if (!code) {
     return <div title={team.name} aria-label={team.name} style={{ ...shared, background: teamGradient(team.name) }} />;
